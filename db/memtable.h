@@ -70,6 +70,7 @@ class MemTable {
   friend class MemTableIterator;
   friend class MemTableBackwardIterator;
 
+  //skiplist's entried are in form of char*
   typedef SkipList<const char*, KeyComparator> Table;
 
   KeyComparator comparator_;

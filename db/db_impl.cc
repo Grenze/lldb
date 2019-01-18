@@ -430,6 +430,7 @@ Status DBImpl::RecoverLogFile(uint64_t log_number, bool last_log,
           record.size(), Status::Corruption("log record too small"));
       continue;
     }
+    //SetContents sets the writeBatch's _rep from record
     WriteBatchInternal::SetContents(&batch, record);
 
     if (mem == nullptr) {
@@ -1238,7 +1239,9 @@ Status DBImpl::Write(const WriteOptions& options, WriteBatch* my_batch) {
     // into mem_.
     {
       mutex_.Unlock();
-      //record the whole content of writeBatch, see write_batch.cc's information about writeBatch's _rep
+      //record the whole content of writeBatch, see write_batch.cc's information about writeBatch's _rep,
+      //log is divided in writeBatch logically and block physically,
+      //therefore in skiplsit there maybe exists the same key in different insert time.
       status = log_->AddRecord(WriteBatchInternal::Contents(updates));
       bool sync_error = false;
       if (status.ok() && options.sync) {
@@ -1248,7 +1251,8 @@ Status DBImpl::Write(const WriteOptions& options, WriteBatch* my_batch) {
         }
       }
       if (status.ok()) {
-        //append the sequence_ and kTypeValue (total 64bits) to the end of user's key, then insert it into skiplist
+        //append the sequence_ and kTypeValue (total 64bits) to the end of user's key, then insert it into skiplist,
+        //see it in memtable.cc's Add function.
         status = WriteBatchInternal::InsertInto(updates, mem_);
       }
       mutex_.Lock();
