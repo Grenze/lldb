@@ -64,7 +64,9 @@ class MemTable {
 
   struct KeyComparator {
     const InternalKeyComparator comparator;
+    //initialize the InternalKeyComparator
     explicit KeyComparator(const InternalKeyComparator& c) : comparator(c) { }
+    //this operator() finally call the InternalKeyComparator comparator's operator() function
     int operator()(const char* a, const char* b) const;
   };
   friend class MemTableIterator;
