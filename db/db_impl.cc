@@ -35,6 +35,11 @@
 #include "util/logging.h"
 #include "util/mutexlock.h"
 
+
+#include <iostream>
+
+
+
 namespace leveldb {
 
 const int kNumNonTableCacheFiles = 10;
@@ -321,6 +326,9 @@ Status DBImpl::Recover(VersionEdit* edit, bool *save_manifest) {
   // produced by an older version of leveldb.
   const uint64_t min_log = versions_->LogNumber();
   const uint64_t prev_log = versions_->PrevLogNumber();
+
+  //std::cout<<"min_log:"<<min_log<<"prev_log:"<<prev_log<<std::endl;
+
   std::vector<std::string> filenames;
   s = env_->GetChildren(dbname_, &filenames);
   if (!s.ok()) {
@@ -1230,6 +1238,7 @@ Status DBImpl::Write(const WriteOptions& options, WriteBatch* my_batch) {
     // into mem_.
     {
       mutex_.Unlock();
+      //record the whole content of writeBatch, see write_batch.cc's information about writeBatch's _rep
       status = log_->AddRecord(WriteBatchInternal::Contents(updates));
       bool sync_error = false;
       if (status.ok() && options.sync) {
@@ -1239,6 +1248,7 @@ Status DBImpl::Write(const WriteOptions& options, WriteBatch* my_batch) {
         }
       }
       if (status.ok()) {
+        //append the sequence_ and kTypeValue (total 64bits) to the end of user's key, then insert it into skiplist
         status = WriteBatchInternal::InsertInto(updates, mem_);
       }
       mutex_.Lock();

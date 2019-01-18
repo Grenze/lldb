@@ -118,6 +118,13 @@ int main(int argc, char** argv) {
   auto end_time = NowNanos();
   cout<< end_time - start_time <<endl;
 
+  /*
+  std::string property;
+  db->GetProperty("leveldb.sstables", &property);
+  cout<<property.c_str()<<endl;
+   */
+
+
   delete db;
   return (ok ? 0 : 1);
 }
