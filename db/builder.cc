@@ -36,8 +36,11 @@ Status BuildTable(const std::string& dbname,
     meta->smallest.DecodeFrom(iter->key());
     for (; iter->Valid(); iter->Next()) {
       Slice key = iter->key();
+      // tips: DecodeFrom every memtable's internal key until the last one, degrade the performance,
+      // from skiplist's node_->Next(0) == null we know the current iter points to the last node of skiplist
+      // set a bool var to know when to get the largest internal key.
       meta->largest.DecodeFrom(key);
-      //internal key and user value
+      // internal key and user value
       builder->Add(key, iter->value());
     }
 
