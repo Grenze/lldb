@@ -94,6 +94,7 @@ void TableBuilder::Add(const Slice& key, const Slice& value) {
   assert(!r->closed);
   if (!ok()) return;
   if (r->num_entries > 0) {
+    // in the DBImpl::DBImpl function options.comparator has been initialized to Internal key comparator
     assert(r->options.comparator->Compare(key, Slice(r->last_key)) > 0);
   }
 

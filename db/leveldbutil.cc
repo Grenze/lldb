@@ -85,9 +85,17 @@ int main(int argc, char** argv) {
 
   size_t total_insert = 1000000;
 
+  //i1 is after s2 in memtable
   leveldb::Slice s1;
+  leveldb::Slice s2;
+  int i1 = 100;
+  int i2 = 101;
+  s1 = to_string(i1);
+  s2 = to_string(i2);
+  cout<<options.comparator->Compare(s1, s2)<<endl;
   auto start_time = NowNanos();
 
+  /*
   for(int i=0; i<total_insert; i++) {
     s1 = std::to_string(i);
     status = db->Put(leveldb::WriteOptions(), s1, std::to_string(i));
@@ -117,6 +125,7 @@ int main(int argc, char** argv) {
   }
   auto end_time = NowNanos();
   cout<< end_time - start_time <<endl;
+   */
 
   /*
   std::string property;
