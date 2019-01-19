@@ -1241,7 +1241,7 @@ Status DBImpl::Write(const WriteOptions& options, WriteBatch* my_batch) {
       mutex_.Unlock();
       //record the whole content of writeBatch, see write_batch.cc's information about writeBatch's _rep,
       //log is divided in writeBatch logically and block physically,
-      //therefore in skiplsit there maybe exists the same key in different insert time.
+      //therefore in skiplsit there maybe exists the same key on different insert time.
       status = log_->AddRecord(WriteBatchInternal::Contents(updates));
       bool sync_error = false;
       if (status.ok() && options.sync) {
@@ -1252,7 +1252,7 @@ Status DBImpl::Write(const WriteOptions& options, WriteBatch* my_batch) {
       }
       if (status.ok()) {
         //append the sequence_ and kTypeValue (total 64bits) to the end of user's key, then insert it into skiplist,
-        //see it in memtable.cc's Add function.
+        //see it in memtable.cc's Add function and write_batch.cc's Put and Delete function.
         status = WriteBatchInternal::InsertInto(updates, mem_);
       }
       mutex_.Lock();
