@@ -1263,8 +1263,7 @@ Status DBImpl::Write(const WriteOptions& options, WriteBatch* my_batch) {
         RecordBackgroundError(status);
       }
     }
-    // there is no need to consider whether updates == tmp_batch_ as there is
-    // only one thread owns tmp_batch_ at a time.
+    // in BuildBatchGroup, if result points to caller's batch, then there is need to clear tmp_batch
     if (updates == tmp_batch_) tmp_batch_->Clear();
 
     versions_->SetLastSequence(last_sequence);
