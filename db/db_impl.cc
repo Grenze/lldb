@@ -241,7 +241,7 @@ void DBImpl::DeleteObsoleteFiles() {
   uint64_t number;
   FileType type;
   for (size_t i = 0; i < filenames.size(); i++) {
-    if (ParseFileName(filenames[i], &number, &type)) {
+    if (ParseFileName(filenames[i], &number, &type)) {  // skip the irrelevant files
       bool keep = true;
       switch (type) {
         case kLogFile:
@@ -565,6 +565,8 @@ void DBImpl::CompactMemTable() {
     edit.SetPrevLogNumber(0);
     edit.SetLogNumber(logfile_number_);  // Earlier logs no longer needed
     s = versions_->LogAndApply(&edit, &mutex_);
+    // versions_'s last useful logFile number now
+    // changed from imm_'s logFile number already compacted to mem_'s logFile number.
   }
 
   if (s.ok()) {
