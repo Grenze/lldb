@@ -1224,7 +1224,9 @@ Status DBImpl::Write(const WriteOptions& options, WriteBatch* my_batch) {
     return w.status;
   }
 
+
   // May temporarily unlock and wait.
+  // my_batch == nullptr is used in TEST_CompactMemTable
   Status status = MakeRoomForWrite(my_batch == nullptr);
   uint64_t last_sequence = versions_->LastSequence();
   Writer* last_writer = &w;
@@ -1340,6 +1342,7 @@ WriteBatch* DBImpl::BuildBatchGroup(Writer** last_writer) {
 
 // REQUIRES: mutex_ is held
 // REQUIRES: this thread is currently at the front of the writer queue
+// Generally force is false (my_batch == nullptr), allow_delay = true.
 Status DBImpl::MakeRoomForWrite(bool force) {
   mutex_.AssertHeld();
   assert(!writers_.empty());
@@ -1367,6 +1370,10 @@ Status DBImpl::MakeRoomForWrite(bool force) {
                (mem_->ApproximateMemoryUsage() <= options_.write_buffer_size)) {
       // There is room in current memtable
       break;
+
+      // Can we assume imm_'s compaction is always finished before mem_ gets full?
+      // if so, we only need mem_->ApproximateMemoryUsage() <= options_.write_buffer_size && !force.
+
     } else if (imm_ != nullptr) {
       // We have filled up the current memtable, but the previous
       // one is still being compacted, so we wait.
