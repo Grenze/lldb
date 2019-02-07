@@ -32,6 +32,7 @@ Status BuildTable(const std::string& dbname,
       return s;
     }
 
+    // allocate a new nvm_imm_ and hook it to ISL using transaction.
     TableBuilder* builder = new TableBuilder(options, file);
     meta->smallest.DecodeFrom(iter->key());
     for (; iter->Valid(); iter->Next()) {

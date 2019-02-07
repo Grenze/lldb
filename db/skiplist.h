@@ -341,6 +341,9 @@ void SkipList<Key,Comparator>::Insert(const Key& key) {
   Node* x = FindGreaterOrEqual(key, prev);
 
   // Our data structure does not allow duplicate insertion
+  // tips: no duplicate insertion due to sequence number, but the user key can be the same,
+  // we should record the overlapped keys' count using UserKeyEqual.
+  // opt: a boolean to indicate its successor's UserKey is the same, convenience for converting it to nvm_imm_.
   assert(x == nullptr || !Equal(key, x->key));
 
   int height = RandomHeight();
