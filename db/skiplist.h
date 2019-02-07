@@ -117,6 +117,8 @@ class SkipList {
 
   Node* NewNode(const Key& key, int height);
   int RandomHeight();
+
+  // see memtable.h's KeyComparator.
   bool Equal(const Key& a, const Key& b) const { return (compare_(a, b) == 0); }
 
   // Return true if key is greater than the data stored in "n"
@@ -343,7 +345,6 @@ void SkipList<Key,Comparator>::Insert(const Key& key) {
   // Our data structure does not allow duplicate insertion
   // tips: no duplicate insertion due to sequence number, but the user key can be the same,
   // we should record the overlapped keys' count using UserKeyEqual.
-  // opt: a boolean to indicate its successor's UserKey is the same, convenience for converting it to nvm_imm_.
   assert(x == nullptr || !Equal(key, x->key));
 
   int height = RandomHeight();
