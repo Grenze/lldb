@@ -27,6 +27,8 @@ static size_t TargetFileSize(const Options* options) {
 // Maximum bytes of overlaps in grandparent (i.e., level+2) before we
 // stop building a single file in a level->level+1 compaction.
 static int64_t MaxGrandParentOverlapBytes(const Options* options) {
+  // tips: a single file generated in a level->level+1 compaction cannot overlaps more than
+  // 10 * standard file size bytes of level+2.
   return 10 * TargetFileSize(options);
 }
 
@@ -34,6 +36,8 @@ static int64_t MaxGrandParentOverlapBytes(const Options* options) {
 // the lower level file set of a compaction if it would make the
 // total compaction cover more than this many bytes.
 static int64_t ExpandedCompactionByteSizeLimit(const Options* options) {
+  // tips: can not expand compaction bytes in level and level+1 more than
+  // 25 * standard file size bytes.
   return 25 * TargetFileSize(options);
 }
 
@@ -42,6 +46,7 @@ static double MaxBytesForLevel(const Options* options, int level) {
   // the level-0 compaction threshold based on number of files.
 
   // Result for both level-0 and level-1
+  // tips: level+1 MaxBytes is 10 times as level MaxBytes.
   double result = 10. * 1048576.0;
   while (level > 1) {
     result *= 10;
@@ -52,6 +57,7 @@ static double MaxBytesForLevel(const Options* options, int level) {
 
 static uint64_t MaxFileSizeForLevel(const Options* options, int level) {
   // We could vary per level to reduce number of files?
+  // tips: currently not implemented.
   return TargetFileSize(options);
 }
 
@@ -152,6 +158,8 @@ bool SomeFileOverlapsRange(
     return false;
   }
 
+  // tips: we doesn't care whether smallest_user_key is before file or in file.
+  // if largest_user_key is before file, then there is no overlap.
   return !BeforeFile(ucmp, largest_user_key, files[index]);
 }
 
@@ -782,6 +790,7 @@ VersionSet::VersionSet(const std::string& dbname,
       options_(options),
       table_cache_(table_cache),
       icmp_(*cmp),
+      // tips: (InternalKeyComparator) is useful for covert imm_ to nvm_imm_
       next_file_number_(2),
       manifest_file_number_(0),  // Filled by Recover()
       last_sequence_(0),
@@ -1267,6 +1276,7 @@ Iterator* VersionSet::MakeInputIterator(Compaction* c) {
 
   // Level-0 files have to be merged together.  For other levels,
   // we will make a concatenating iterator per level.
+  // tips: As if every file in level-0 represents a level due to they may overlap each other.
   // TODO(opt): use concatenating iterator for level-0 if there is no overlap
   const int space = (c->level() == 0 ? c->inputs_[0].size() + 1 : 2);
   Iterator** list = new Iterator*[space];

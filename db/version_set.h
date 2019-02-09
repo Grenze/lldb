@@ -134,8 +134,8 @@ class Version {
   int refs_;                    // Number of live refs to this version
 
   // List of files per level
-  // tips: when compact SSTs, you need to travel all the FileMetaData
-  // in two neighbour levels three times (see GetOverlappingInputs),
+  // tips: when compact SSTs, you need to travel all the FileMetaData using binary search
+  // in two neighbour levels two times (see GetOverlappingInputs),
   // which may costs a lot.
   std::vector<FileMetaData*> files_[config::kNumLevels];
 

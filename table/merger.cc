@@ -139,6 +139,7 @@ class MergingIterator : public Iterator {
   // We might want to use a heap in case there are lots of children.
   // For now we use a simple array since we expect a very small number
   // of children in leveldb.
+  // tips: one of reason why levelDB can not hold too much data.
   const Comparator* comparator_;
   IteratorWrapper* children_;
   int n_;
