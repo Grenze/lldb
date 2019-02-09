@@ -141,7 +141,7 @@ class MergingIterator : public Iterator {
   // of children in leveldb.
   // tips: one of reason why levelDB can not hold too much data.
   // For instance, in level-3 there is a file overlaps more than 100 files in level-4,
-  // Will it be a disaster to finish the compact?
+  // Will it be a disaster to finish the compact? Solution: See ShouldStopBefore.
   const Comparator* comparator_;
   IteratorWrapper* children_;
   int n_;

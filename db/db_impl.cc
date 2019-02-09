@@ -760,8 +760,8 @@ void DBImpl::BackgroundCompaction() {
     if (!status.ok()) {
       RecordBackgroundError(status);
     }
-    CleanupCompaction(compact);
-    c->ReleaseInputs();
+    CleanupCompaction(compact); // If close DB while doing compaction
+    c->ReleaseInputs(); // Unfre input_version_
     DeleteObsoleteFiles();
   }
   delete c;
@@ -983,6 +983,7 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
       } else if (ikey.type == kTypeDeletion &&
                  ikey.sequence <= compact->smallest_snapshot &&
                  compact->compaction->IsBaseLevelForKey(ikey.user_key)) {
+        // tips: key deleted and no such key in higher level, delete it safely.
         // For this user key:
         // (1) there is no data in higher levels
         // (2) data in lower levels will have larger sequence numbers
