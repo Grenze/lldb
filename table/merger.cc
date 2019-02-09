@@ -140,6 +140,8 @@ class MergingIterator : public Iterator {
   // For now we use a simple array since we expect a very small number
   // of children in leveldb.
   // tips: one of reason why levelDB can not hold too much data.
+  // For instance, in level-3 there is a file overlaps more than 100 files in level-4,
+  // Will it be a disaster to finish the compact?
   const Comparator* comparator_;
   IteratorWrapper* children_;
   int n_;
