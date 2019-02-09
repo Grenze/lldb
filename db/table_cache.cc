@@ -88,12 +88,14 @@ Iterator* TableCache::NewIterator(const ReadOptions& options,
   }
 
   Cache::Handle* handle = nullptr;
+  // tips: find it in table_cache_ or open SST and insert it into table_cache_.
   Status s = FindTable(file_number, file_size, &handle);
   if (!s.ok()) {
     return NewErrorIterator(s);
   }
 
   Table* table = reinterpret_cast<TableAndFile*>(cache_->Value(handle))->table;
+  // tips: another NewTwoLevelIterator here.
   Iterator* result = table->NewIterator(options);
   result->RegisterCleanup(&UnrefEntry, cache_, handle);
   if (tableptr != nullptr) {
