@@ -218,6 +218,7 @@ class Version::LevelFileNumIterator : public Iterator {
   mutable char value_buf_[16];
 };
 
+// file_value: file_number file_size
 static Iterator* GetFileIterator(void* arg,
                                  const ReadOptions& options,
                                  const Slice& file_value) {
@@ -1276,7 +1277,8 @@ Iterator* VersionSet::MakeInputIterator(Compaction* c) {
 
   // Level-0 files have to be merged together.  For other levels,
   // we will make a concatenating iterator per level.
-  // tips: As if every file in level-0 represents a level due to they may overlap each other.
+  // tips: As if every file in level-0 represents a level due to they may overlap each other,
+  // NewTwoLevelIterator own LevelFileNumIterator and table_cache_->NewIterator
   // TODO(opt): use concatenating iterator for level-0 if there is no overlap
   const int space = (c->level() == 0 ? c->inputs_[0].size() + 1 : 2);
   Iterator** list = new Iterator*[space];

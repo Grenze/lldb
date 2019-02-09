@@ -157,11 +157,13 @@ void TwoLevelIterator::InitDataBlock() {
   if (!index_iter_.Valid()) {
     SetDataIterator(nullptr);
   } else {
+    // handle: file_number file_size
     Slice handle = index_iter_.value();
     if (data_iter_.iter() != nullptr && handle.compare(data_block_handle_) == 0) {
       // data_iter_ is already constructed with this iterator, so
       // no need to change anything
     } else {
+      // tips: call GetFileIterator here. arg_ is table_cache_.
       Iterator* iter = (*block_function_)(arg_, options_, handle);
       data_block_handle_.assign(handle.data(), handle.size());
       SetDataIterator(iter);
