@@ -134,6 +134,7 @@ DBImpl::DBImpl(const Options& raw_options, const std::string& dbname)
                                &internal_filter_policy_, raw_options)),
       owns_info_log_(options_.info_log != raw_options.info_log),
       owns_cache_(options_.block_cache != raw_options.block_cache),
+      // tips: disable owns_cache_ to see how performance degrade.
       dbname_(dbname),
       // tips: TableCacheSize = options_.max_open_files - kNumNonTableCacheFiles = 1000(default) - 10 = 990
       table_cache_(new TableCache(dbname_, options_, TableCacheSize(options_))),
