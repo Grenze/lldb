@@ -63,6 +63,9 @@ class DBIter: public Iterator {
     delete iter_;
   }
   virtual bool Valid() const { return valid_; }
+
+  // tips: saved_key_ and saved_value_ record the key and value before
+  // iter_->key() and iter_->value() which is currently pointed.(convenient for user_comparator_)
   virtual Slice key() const {
     assert(valid_);
     return (direction_ == kForward) ? ExtractUserKey(iter_->key()) : saved_key_;
@@ -170,6 +173,7 @@ void DBIter::Next() {
     SaveKey(ExtractUserKey(iter_->key()), &saved_key_);
   }
 
+  // tips: true means skip saved_key_ to the next acceptable key.
   FindNextUserEntry(true, &saved_key_);
 }
 
@@ -242,6 +246,8 @@ void DBIter::FindPrevUserEntry() {
       if (ParseKey(&ikey) && ikey.sequence <= sequence_) {
         if ((value_type != kTypeDeletion) &&
             user_comparator_->Compare(ikey.user_key, saved_key_) < 0) {
+          // tips: make sure iter_->key's user_key < saved_key_, so saved_key_ and
+          // saved_value_ are what we want after Pre() called.
           // We encountered a non-deleted value in entries for previous keys,
           break;
         }
