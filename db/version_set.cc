@@ -369,6 +369,7 @@ Status Version::Get(const ReadOptions& options,
       tmp.reserve(num_files);
       for (uint32_t i = 0; i < num_files; i++) {
         FileMetaData* f = files[i];
+        // tips: user_comparator is useful for merging.
         if (ucmp->Compare(user_key, f->smallest.user_key()) >= 0 &&
             ucmp->Compare(user_key, f->largest.user_key()) <= 0) {
           tmp.push_back(f);
@@ -387,6 +388,7 @@ Status Version::Get(const ReadOptions& options,
         num_files = 0;
       } else {
         tmp2 = files[index];
+        // tips: user_key is before files[index] and after files[index-1].
         if (ucmp->Compare(user_key, tmp2->smallest.user_key()) < 0) {
           // All of "tmp2" is past any data for user_key
           files = nullptr;
