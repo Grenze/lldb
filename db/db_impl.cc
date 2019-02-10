@@ -1529,6 +1529,7 @@ Status DB::Delete(const WriteOptions& opt, const Slice& key) {
 
 DB::~DB() { }
 
+// tips: If we open all the SST and insert them into table_cache_(experimental).
 Status DB::Open(const Options& options, const std::string& dbname,
                 DB** dbptr) {
   *dbptr = nullptr;
