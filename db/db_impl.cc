@@ -1115,6 +1115,9 @@ Iterator* DBImpl::NewInternalIterator(const ReadOptions& options,
   versions_->current()->Ref();
 
   IterState* cleanup = new IterState(&mutex_, mem_, imm_, versions_->current());
+  // tips: register the clean up methods for iterators,
+  // call ~ MergingIterator to call them automatically,
+  // cleanup is the arg for CleanupIteratorState.
   internal_iter->RegisterCleanup(CleanupIteratorState, cleanup, nullptr);
 
   *seed = ++seed_;
