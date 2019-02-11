@@ -898,6 +898,7 @@ Status VersionSet::LogAndApply(VersionEdit* edit, port::Mutex* mu) {
   }
 
   // Install the new version
+  // tips: mu is locked while install the new version.
   if (s.ok()) {
     AppendVersion(v);
     log_number_ = edit->log_number_;
@@ -1200,6 +1201,7 @@ uint64_t VersionSet::ApproximateOffsetOf(Version* v, const InternalKey& ikey) {
   return result;
 }
 
+ // tips: dummy_versions_ is used for AddLiveFiles here.
 void VersionSet::AddLiveFiles(std::set<uint64_t>* live) {
   for (Version* v = dummy_versions_.next_;
        v != &dummy_versions_;
