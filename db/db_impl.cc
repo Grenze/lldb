@@ -1203,6 +1203,8 @@ void DBImpl::RecordReadSample(Slice key) {
   }
 }
 
+ // tips: always get snapshot from versions_->LastSequence().
+ // can be supported by nvm.
 const Snapshot* DBImpl::GetSnapshot() {
   MutexLock l(&mutex_);
   return snapshots_.New(versions_->LastSequence());
