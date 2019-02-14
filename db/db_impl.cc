@@ -761,7 +761,7 @@ void DBImpl::BackgroundCompaction() {
       RecordBackgroundError(status);
     }
     CleanupCompaction(compact); // If close DB while doing compaction
-    c->ReleaseInputs(); // Unfre input_version_
+    c->ReleaseInputs(); // Unref input_version_
     DeleteObsoleteFiles();
   }
   delete c;
