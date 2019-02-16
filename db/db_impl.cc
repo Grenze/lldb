@@ -672,6 +672,7 @@ void DBImpl::MaybeScheduleCompaction() {
   } else if (imm_ == nullptr &&
              manual_compaction_ == nullptr &&
              !versions_->NeedsCompaction()) {
+    // nvm_background_c_s == true || !versions_>NeedsCompaction()
     // No work to be done
   } else {
     background_compaction_scheduled_ = true;
@@ -698,6 +699,8 @@ void DBImpl::BackgroundCall() {
 
   // Previous compaction may have produced too many files in a level,
   // so reschedule another compaction if needed.
+  // tips: Maybe cause avalanche of compaction.
+  // Be careful of !versions_->NeedsCompaction().
   MaybeScheduleCompaction();
   background_work_finished_signal_.SignalAll();
 }
@@ -707,8 +710,25 @@ void DBImpl::BackgroundCompaction() {
 
   if (imm_ != nullptr) {
     CompactMemTable();
+    // No reason to SignalAll() here.
     return;
   }
+
+  // tips: assert(nvm_background_c_s == false);
+  // Now set nvm_background_c_s true, no more nvm_compact thread,
+  // and set background_c_s false to allow CompactMemTable().
+
+  // mem_compact and nvm_compact threads will both modify ISL,
+  // use port::Mutex nvm_mutex_ to protect ISL.
+
+  // Here mutex_.Unlock();
+  // and DoCompactionWork for nvm data,
+  // mutex_.Lock();
+
+  // Or pass mutex_ into DoCompactionWork to protect version_,
+  // unlock while modifying nvm data, lock after work done.(Like LogAndApply)
+
+  // After nvm_compact finished, it's safe to set nvm_background_c_s false;
 
   Compaction* c;
   bool is_manual = (manual_compaction_ != nullptr);
@@ -1396,6 +1416,7 @@ Status DBImpl::MakeRoomForWrite(bool force) {
       background_work_finished_signal_.Wait();
     } else if (versions_->NumLevelFiles(0) >= config::kL0_StopWritesTrigger) {
       // There are too many level-0 files.
+      // tips: overlapped intervals are too many in nvm(for instance 20).
       Log(options_.info_log, "Too many L0 files; waiting...\n");
       background_work_finished_signal_.Wait();
     } else {

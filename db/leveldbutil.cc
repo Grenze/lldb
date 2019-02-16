@@ -98,6 +98,7 @@ int main(int argc, char** argv) {
     }
   }
 
+
   std::string rep;
   for(int i=0; i<total_insert; i++) {
     s1 = std::to_string(i);
@@ -116,8 +117,9 @@ int main(int argc, char** argv) {
       break;
     }
   }
+
   auto end_time = NowNanos();
-  cout<< end_time - start_time <<endl;
+  cout<< "nanosecond: "<<end_time - start_time <<endl;
 
   /*
   std::string property;
