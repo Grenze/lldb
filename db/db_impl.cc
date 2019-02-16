@@ -149,6 +149,7 @@ DBImpl::DBImpl(const Options& raw_options, const std::string& dbname)
       seed_(0),
       tmp_batch_(new WriteBatch),
       background_compaction_scheduled_(false),
+      // nvm_background_c_s(false),
       manual_compaction_(nullptr),
       versions_(new VersionSet(dbname_, &options_, table_cache_,
                                &internal_comparator_)) {
@@ -159,7 +160,7 @@ DBImpl::~DBImpl() {
   // Wait for background work to finish
   mutex_.Lock();
   shutting_down_.Release_Store(this);  // Any non-null value is ok
-  while (background_compaction_scheduled_) {
+  while (background_compaction_scheduled_) { // || nvm_background_c_s to ensure nvm_compact safe.
     background_work_finished_signal_.Wait();
   }
   mutex_.Unlock();
