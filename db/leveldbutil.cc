@@ -86,40 +86,48 @@ int main(int argc, char** argv) {
   size_t total_insert = 1000000;
 
   leveldb::Slice s1;
-  auto start_time = NowNanos();
 
+    auto start_time = NowNanos();
 
-  for(int i=0; i<total_insert; i++) {
-    s1 = std::to_string(i);
-    status = db->Put(leveldb::WriteOptions(), s1, std::to_string(i));
-    if (!status.ok()) {
-      cout<<"put error"<<endl;
-      break;
+    for(int i=0; i<total_insert; i++) {
+        s1 = std::to_string(i);
+        status = db->Put(leveldb::WriteOptions(), s1, std::to_string(i));
+        if (!status.ok()) {
+            cout<<"put error"<<endl;
+            break;
+        }
     }
-  }
 
+    auto p1_time = NowNanos();
+    cout<< "Phase1 nanosecond: " << p1_time - start_time <<endl;
 
-  std::string rep;
-  for(int i=0; i<total_insert; i++) {
-    s1 = std::to_string(i);
-    status = db->Get(leveldb::ReadOptions(), s1, &rep);
-    if (!status.ok() || rep != s1) {
-      cout<<"get error"<<endl;
-      break;
+    std::string rep;
+    for(int i=0; i<total_insert; i++) {
+        s1 = std::to_string(i);
+        status = db->Get(leveldb::ReadOptions(), s1, &rep);
+        if (!status.ok() || rep != s1) {
+            cout<<"get error"<<endl;
+            break;
+        }
     }
-  }
 
-  for(int i=0; i<total_insert ;i++) {
-    s1 = std::to_string(i);
-    status = db->Delete(leveldb::WriteOptions(), s1);
-    if (!status.ok()) {
-      cout<<"delete error"<<endl;
-      break;
+    auto p2_time = NowNanos();
+    cout<< "Phase2 nanosecond: " << p2_time - p1_time <<endl;
+
+    for(int i=0; i<total_insert ;i++) {
+        s1 = std::to_string(i);
+        status = db->Delete(leveldb::WriteOptions(), s1);
+        if (!status.ok()) {
+            cout<<"delete error"<<endl;
+            break;
+        }
     }
-  }
 
-  auto end_time = NowNanos();
-  cout<< "nanosecond: "<<end_time - start_time <<endl;
+    auto p3_time = NowNanos();
+    cout<< "Phase3 nanosecond: " << p3_time - p2_time <<endl;
+
+    auto end_time = NowNanos();
+    cout<< "Total nanosecond: "<<end_time - start_time <<endl;
 
   /*
   std::string property;
