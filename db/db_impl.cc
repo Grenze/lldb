@@ -116,6 +116,7 @@ Options SanitizeOptions(const std::string& dbname,
     }
   }
   if (result.block_cache == nullptr) {
+      //tips: disable block cache and table cache.
     result.block_cache = NewLRUCache(8 << 20);
   }
   return result;
@@ -996,6 +997,7 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
         current_user_key.assign(ikey.user_key.data(), ikey.user_key.size());
         has_current_user_key = true;
         last_sequence_for_key = kMaxSequenceNumber;
+        // tips: the user key you first encounter is always kept due to largest sequence.
       }
 
       if (last_sequence_for_key <= compact->smallest_snapshot) {

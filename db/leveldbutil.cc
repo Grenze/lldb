@@ -56,9 +56,9 @@ static void Usage() {
 using namespace std;
 
 ::std::uint64_t NowNanos() {
-  return ::std::chrono::duration_cast<::std::chrono::nanoseconds>(
-          ::std::chrono::steady_clock::now().time_since_epoch())
-          .count();
+  return static_cast<uint64_t>(::std::chrono::duration_cast<::std::chrono::nanoseconds>(
+            ::std::chrono::steady_clock::now().time_since_epoch())
+            .count());
 }
 int main(int argc, char** argv) {
   leveldb::Env* env = leveldb::Env::Default();

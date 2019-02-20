@@ -393,6 +393,7 @@ class Compaction {
   // higher level than the ones involved in this compaction (i.e. for
   // all L >= level_ + 2).
   size_t level_ptrs_[config::kNumLevels];
+  // tips: skip files already compared in every higher level.
 };
 
 }  // namespace leveldb
