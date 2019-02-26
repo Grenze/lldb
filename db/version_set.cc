@@ -819,6 +819,7 @@ void VersionSet::AppendVersion(Version* v) {
   assert(v->refs_ == 0);
   assert(v != current_);
   if (current_ != nullptr) {
+    // tips: unref the old version, delete obsolete files.
     current_->Unref();
   }
   current_ = v;
