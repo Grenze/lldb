@@ -101,6 +101,22 @@ int main(int argc, char** argv) {
     auto p1_time = NowNanos();
     cout<< "Phase1 nanosecond: " << p1_time - start_time <<endl;
 
+
+    leveldb::Iterator* it = db->NewIterator(leveldb::ReadOptions());
+    int check = 0;
+    for (it->SeekToFirst(); it->Valid(); it->Next()) {
+        //std::cout<<check<<std::endl;
+        //cout << it->key().ToString() << ": "  << it->value().ToString() << endl;
+        check++;
+    }
+    assert(check == total_insert);
+    assert(it->status().ok());  // Check for any errors found during the scan
+    delete it;
+
+    auto p2_time = NowNanos();
+    cout<< "Phase2 nanosecond: " << p2_time - p1_time <<endl;
+
+
     std::string rep;
     for(int i=0; i<total_insert; i++) {
         s1 = std::to_string(i);
@@ -111,8 +127,8 @@ int main(int argc, char** argv) {
         }
     }
 
-    auto p2_time = NowNanos();
-    cout<< "Phase2 nanosecond: " << p2_time - p1_time <<endl;
+    auto p3_time = NowNanos();
+    cout<< "Phase3 nanosecond: " << p3_time - p2_time <<endl;
 
     for(int i=0; i<total_insert ;i++) {
         s1 = std::to_string(i);
@@ -123,8 +139,8 @@ int main(int argc, char** argv) {
         }
     }
 
-    auto p3_time = NowNanos();
-    cout<< "Phase3 nanosecond: " << p3_time - p2_time <<endl;
+    auto p4_time = NowNanos();
+    cout<< "Phase4 nanosecond: " << p4_time - p3_time <<endl;
 
     auto end_time = NowNanos();
     cout<< "Total nanosecond: "<<end_time - start_time <<endl;
