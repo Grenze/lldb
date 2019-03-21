@@ -83,13 +83,13 @@ int main(int argc, char** argv) {
   //leveldb::Status status = leveldb::DB::Open(options, "/dev/shm/testdb", &db);
   assert(status.ok());
 
-  size_t total_insert = 1000000;
+  size_t total_insert = 1000000/2;
 
   leveldb::Slice s1;
 
     auto start_time = NowNanos();
 
-    for(int i=0; i<total_insert; i++) {
+    for(int i = 1; i <= total_insert; i++) {
         s1 = std::to_string(i);
         status = db->Put(leveldb::WriteOptions(), s1, std::to_string(i));
         if (!status.ok()) {
@@ -109,6 +109,7 @@ int main(int argc, char** argv) {
         //cout << it->key().ToString() << ": "  << it->value().ToString() << endl;
         check++;
     }
+    //std::cout<<check<<std::endl;
     assert(check == total_insert);
     assert(it->status().ok());  // Check for any errors found during the scan
     delete it;
@@ -118,7 +119,7 @@ int main(int argc, char** argv) {
 
 
     std::string rep;
-    for(int i=0; i<total_insert; i++) {
+    for(int i = 1; i <= total_insert; i++) {
         s1 = std::to_string(i);
         status = db->Get(leveldb::ReadOptions(), s1, &rep);
         if (!status.ok() || rep != s1) {
@@ -130,7 +131,7 @@ int main(int argc, char** argv) {
     auto p3_time = NowNanos();
     cout<< "Phase3 nanosecond: " << p3_time - p2_time <<endl;
 
-    for(int i=0; i<total_insert ;i++) {
+    for(int i = 1; i <= total_insert ;i++) {
         s1 = std::to_string(i);
         status = db->Delete(leveldb::WriteOptions(), s1);
         if (!status.ok()) {
