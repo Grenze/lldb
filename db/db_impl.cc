@@ -674,7 +674,7 @@ void DBImpl::MaybeScheduleCompaction() {
   } else if (imm_ == nullptr &&
              manual_compaction_ == nullptr &&
              !versions_->NeedsCompaction()) {
-    // nvm_background_c_s == true || !versions_>NeedsCompaction()
+    // && (nvm_background_c_s == true || !versions_>NeedsCompaction())
     // No work to be done
   } else {
     background_compaction_scheduled_ = true;
@@ -697,7 +697,7 @@ void DBImpl::BackgroundCall() {
     BackgroundCompaction();
   }
 
-  background_compaction_scheduled_ = false;
+  background_compaction_scheduled_ = false;// move it into BackgroundCompaction()
 
   // Previous compaction may have produced too many files in a level,
   // so reschedule another compaction if needed.
