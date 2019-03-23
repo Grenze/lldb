@@ -83,20 +83,37 @@ int main(int argc, char** argv) {
   //leveldb::Status status = leveldb::DB::Open(options, "/dev/shm/testdb", &db);
   assert(status.ok());
 
-  size_t total_insert = 1000000/2;
 
-  leveldb::Slice s1;
+    size_t total_insert = 500000*2*10;
+
+    leveldb::Slice s1;
+    leveldb::Slice s2;
+
 
     auto start_time = NowNanos();
-
+    int ll = 1;
+    //for (ll = 0; ll < 1000; ll++) {
     for(int i = 1; i <= total_insert; i++) {
         s1 = std::to_string(i);
-        status = db->Put(leveldb::WriteOptions(), s1, std::to_string(i));
+        status = db->Put(leveldb::WriteOptions(), s1, std::to_string(i+ll));
         if (!status.ok()) {
             cout<<"put error"<<endl;
             break;
         }
     }
+    //}
+
+
+    /*
+    for(int i = 1; i <= total_insert; i++) {
+        s1 = std::to_string(i);
+        status = db->Put(leveldb::WriteOptions(), s1, std::to_string(i+1));
+        if (!status.ok()) {
+            cout<<"put error"<<endl;
+            break;
+        }
+    }
+     */
 
     auto p1_time = NowNanos();
     cout<< "Phase1 nanosecond: " << p1_time - start_time <<endl;
@@ -104,32 +121,70 @@ int main(int argc, char** argv) {
 
     leveldb::Iterator* it = db->NewIterator(leveldb::ReadOptions());
     int check = 0;
-    for (it->SeekToFirst(); it->Valid(); it->Next()) {
-        //std::cout<<check<<std::endl;
+/*
+    it->SeekToFirst();
+    leveldb::Slice first(it->key().ToString());
+    it->SeekToLast();
+    leveldb::Slice last(it->key().ToString());
+
+    for (it->Seek(last.ToString()); it->Valid() && it->key().ToString() >= first.ToString(); it->Prev()) {
         //cout << it->key().ToString() << ": "  << it->value().ToString() << endl;
         check++;
     }
-    //std::cout<<check<<std::endl;
+    assert(check == total_insert);
+
+    check = 0;
+    for (it->Seek(first.ToString()); it->Valid() && it->key().ToString() <= last.ToString(); it->Next()) {
+        //cout << it->key().ToString() << ": "  << it->value().ToString() << endl;
+        check++;
+    }
+    assert(check == total_insert);
+
+    check = 0;
+    for (it->SeekToLast(); it->Valid(); it->Prev()) {
+        //cout << it->key().ToString() << ": "  << it->value().ToString() << endl;
+        check++;
+    }
+    assert(check == total_insert);
+
+    check = 0;*/
+    //it->Seek("0");
+    //std::cout<<it->key().ToString()<<std::endl;//1
+    for (it->Seek("0"); it->Valid(); it->Next()) {
+        //cout << it->key().ToString() << ": "  << it->value().ToString() << endl;
+        check++;
+    }
     assert(check == total_insert);
     assert(it->status().ok());  // Check for any errors found during the scan
-    delete it;
+
 
     auto p2_time = NowNanos();
     cout<< "Phase2 nanosecond: " << p2_time - p1_time <<endl;
 
+    check = 0;
+    for (it->SeekToLast(); it->Valid(); it->Prev()) {
+        //cout << it->key().ToString() << ": "  << it->value().ToString() << endl;
+        check++;
+    }
+    assert(check == total_insert);
+    delete it;
+
+    auto p3_time = NowNanos();
+    cout<< "Phase3 nanosecond: " << p3_time - p2_time <<endl;
 
     std::string rep;
     for(int i = 1; i <= total_insert; i++) {
         s1 = std::to_string(i);
+        s2 = std::to_string(i+ll);
         status = db->Get(leveldb::ReadOptions(), s1, &rep);
-        if (!status.ok() || rep != s1) {
+        if (!status.ok() || rep != s2) {
             cout<<"get error"<<endl;
             break;
         }
     }
 
-    auto p3_time = NowNanos();
-    cout<< "Phase3 nanosecond: " << p3_time - p2_time <<endl;
+    auto p4_time = NowNanos();
+    cout<< "Phase4 nanosecond: " << p4_time - p3_time <<endl;
 
     for(int i = 1; i <= total_insert ;i++) {
         s1 = std::to_string(i);
@@ -140,19 +195,13 @@ int main(int argc, char** argv) {
         }
     }
 
-    auto p4_time = NowNanos();
-    cout<< "Phase4 nanosecond: " << p4_time - p3_time <<endl;
+    auto p5_time = NowNanos();
+    cout<< "Phase5 nanosecond: " << p5_time - p4_time <<endl;
 
     auto end_time = NowNanos();
-    cout<< "Total nanosecond: "<<end_time - start_time <<endl;
+    cout<< "Total nanosecond: "<< end_time - start_time <<endl;
 
-  /*
-  std::string property;
-  db->GetProperty("leveldb.sstables", &property);
-  cout<<property.c_str()<<endl;
-   */
-
-
-  delete db;
-  return (ok ? 0 : 1);
+    delete db;
+    //std::cout<<sizeof(void*)<<" "<<sizeof(int)<<" "<<sizeof(size_t); //8 4 8
+    return 1;
 }
