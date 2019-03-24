@@ -79,18 +79,25 @@ int main(int argc, char** argv) {
   leveldb::DB* db;
   leveldb::Options options;
   options.create_if_missing = true;
-  leveldb::Status status = leveldb::DB::Open(options, "/tmp/testdb", &db);
-  //leveldb::Status status = leveldb::DB::Open(options, "/dev/shm/testdb", &db);
-  assert(status.ok());
 
 
-    size_t total_insert = 500000*2*10;
+    size_t total_insert = 500000*2*20;
 
     leveldb::Slice s1;
     leveldb::Slice s2;
 
 
     auto start_time = NowNanos();
+
+    leveldb::Status status = leveldb::DB::Open(options, "/tmp/testdb", &db);
+    //leveldb::Status status = leveldb::DB::Open(options, "/dev/shm/testdb", &db);
+    assert(status.ok());
+
+    auto open_time = NowNanos();
+    std::cout<< "OpenDB nanosecond: " << open_time - start_time <<endl;
+
+
+
     int ll = 1;
     //for (ll = 0; ll < 1000; ll++) {
     for(int i = 1; i <= total_insert; i++) {
