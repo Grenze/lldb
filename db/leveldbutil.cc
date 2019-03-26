@@ -81,7 +81,7 @@ int main(int argc, char** argv) {
   options.create_if_missing = true;
 
 
-    size_t total_insert = 500000*2*20;
+    size_t total_insert = 500000;
 
     leveldb::Slice s1;
     leveldb::Slice s2;
