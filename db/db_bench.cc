@@ -41,27 +41,37 @@
 //      sstables    -- Print sstable info
 //      heapprofile -- Dump a heap profile (if supported by this port)
 static const char* FLAGS_benchmarks =
-    "fillseq,"
-    "readwhilewriting,"
-    "fillsync,"
-    "fillrandom,"
-    "overwrite,"
-    "readrandom,"
-    //"readrandom,"  // Extra run to allow previous compactions to quiesce
-    "readseq,"
-    "readreverse,"
-    "seekrandom,"
-    //"compact,"
-    //"readrandom,"
-    //"readseq,"
-    //"readreverse,"
-    //"fill100K,"
-    //"crc32c,"
-    //"snappycomp,"
-    //"snappyuncomp,"
-    //"acquireload,"
-    ;
-
+        "fillseq,"
+        //"snapshot,"
+        "readwhilewriting,"
+        //"readsnapshotwhilewriting,"
+        "fillsync,"
+        "fillrandom,"
+        //"snapshot,"
+        //"overwrite,"
+        //"overwrite,"
+        "overwrite,"
+        "readrandom,"
+        //"readrandomsnapshot,"
+        "readmissing,"
+        //"readmissingsnapshot,"
+        //"readrandom,"  // Extra run to allow previous compactions to quiesce
+        "readseq,"
+        //"readseqsnapshot,"
+        "readreverse,"
+        //"readreversesnapshot,"
+        "seekrandom,"
+        //"seekrandomsnapshot,"
+        //"compact,"  // compact the entire db
+        //"readrandom,"
+        //"readseq,"
+        //"readreverse,"
+        //"fill100K,"
+        //"crc32c,"
+        //"snappycomp,"
+        //"snappyuncomp,"
+        //"acquireload,"
+;
 // Number of key/values to place in database
 static int FLAGS_num = 100000;
 
@@ -325,7 +335,8 @@ class Benchmark {
   int value_size_;
   int entries_per_batch_;
   WriteOptions write_options_;
-  int reads_;
+    ReadOptions read_options_;
+    int reads_;
   int heap_counter_;
 
   void PrintHeader() {
@@ -426,7 +437,15 @@ class Benchmark {
     }
   }
 
+  void ReleaseSnapshot() {
+      if (read_options_.snapshot != nullptr) {
+          db_->ReleaseSnapshot(read_options_.snapshot);
+          read_options_.snapshot = nullptr;
+      }
+  }
+
   ~Benchmark() {
+    ReleaseSnapshot();
     delete db_;
     delete cache_;
     delete filter_policy_;
@@ -481,21 +500,29 @@ class Benchmark {
         num_ /= 1000;
         write_options_.sync = true;
         method = &Benchmark::WriteRandom;
-      } else if (name == Slice("fill100K")) {
-        fresh_db = true;
-        num_ /= 1000;
-        value_size_ = 100 * 1000;
-        method = &Benchmark::WriteRandom;
+      } else if (name == Slice("snapshot")) {
+          read_options_.snapshot = db_->GetSnapshot();
+          continue;
       } else if (name == Slice("readseq")) {
-        method = &Benchmark::ReadSequential;
+          method = &Benchmark::ReadSequential;
+      } else if(name == Slice("readseqsnapshot")) {
+          method = &Benchmark::ReadSequentialSnapshot;
       } else if (name == Slice("readreverse")) {
-        method = &Benchmark::ReadReverse;
+          method = &Benchmark::ReadReverse;
+      } else if (name == Slice("readreversesnapshot")) {
+          method = &Benchmark::ReadReverseSnapshot;
       } else if (name == Slice("readrandom")) {
-        method = &Benchmark::ReadRandom;
+          method = &Benchmark::ReadRandom;
+      } else if (name == Slice("readrandomsnapshot")) {
+          method = &Benchmark::ReadRandomSnapshot;
       } else if (name == Slice("readmissing")) {
-        method = &Benchmark::ReadMissing;
+          method = &Benchmark::ReadMissing;
+      } else if (name == Slice("readmissingsnapshot")){
+          method = &Benchmark::ReadMissingSnapshot;
       } else if (name == Slice("seekrandom")) {
-        method = &Benchmark::SeekRandom;
+          method = &Benchmark::SeekRandom;
+      } else if (name == Slice("seekrandomsnapshot")) {
+          method = &Benchmark::SeekRandomSnapshot;
       } else if (name == Slice("readhot")) {
         method = &Benchmark::ReadHot;
       } else if (name == Slice("readrandomsmall")) {
@@ -508,6 +535,8 @@ class Benchmark {
       } else if (name == Slice("readwhilewriting")) {
         num_threads++;  // Add extra thread for writing
         method = &Benchmark::ReadWhileWriting;
+      } else if(name == Slice("readsnapshotwhilewriting")) {
+          method = &Benchmark::ReadSnapshotWhileWriting;
       } else if (name == Slice("compact")) {
         method = &Benchmark::Compact;
       } else if (name == Slice("crc32c")) {
@@ -536,7 +565,9 @@ class Benchmark {
                   name.ToString().c_str());
           method = nullptr;
         } else {
-          delete db_;
+            ReleaseSnapshot();
+
+            delete db_;
           db_ = nullptr;
           DestroyDB(FLAGS_db, Options());
           Open();
@@ -724,7 +755,9 @@ class Benchmark {
   }
 
   void OpenBench(ThreadState* thread) {
-    for (int i = 0; i < num_; i++) {
+      ReleaseSnapshot();
+
+  for (int i = 0; i < num_; i++) {
       delete db_;
       Open();
       thread->stats.FinishedSingleOp();
@@ -782,6 +815,19 @@ class Benchmark {
     thread->stats.AddBytes(bytes);
   }
 
+    void ReadSequentialSnapshot(ThreadState* thread) {
+        Iterator* iter = db_->NewIterator(read_options_);
+        int i = 0;
+        int64_t bytes = 0;
+        for (iter->SeekToFirst(); i < reads_ && iter->Valid(); iter->Next()) {
+            bytes += iter->key().size() + iter->value().size();
+            thread->stats.FinishedSingleOp();
+            ++i;
+        }
+        delete iter;
+        thread->stats.AddBytes(bytes);
+    }
+
   void ReadReverse(ThreadState* thread) {
     Iterator* iter = db_->NewIterator(ReadOptions());
     int i = 0;
@@ -794,6 +840,19 @@ class Benchmark {
     delete iter;
     thread->stats.AddBytes(bytes);
   }
+
+    void ReadReverseSnapshot(ThreadState* thread) {
+        Iterator* iter = db_->NewIterator(read_options_);
+        int i = 0;
+        int64_t bytes = 0;
+        for (iter->SeekToLast(); i < reads_ && iter->Valid(); iter->Prev()) {
+            bytes += iter->key().size() + iter->value().size();
+            thread->stats.FinishedSingleOp();
+            ++i;
+        }
+        delete iter;
+        thread->stats.AddBytes(bytes);
+    }
 
   void ReadRandom(ThreadState* thread) {
     ReadOptions options;
@@ -813,7 +872,24 @@ class Benchmark {
     thread->stats.AddMessage(msg);
   }
 
-  void ReadMissing(ThreadState* thread) {
+    void ReadRandomSnapshot(ThreadState* thread) {
+        std::string value;
+        int found = 0;
+        for (int i = 0; i < reads_; i++) {
+            char key[100];
+            const int k = thread->rand.Next() % FLAGS_num;
+            snprintf(key, sizeof(key), "%016d", k);
+            if (db_->Get(read_options_, key, &value).ok()) {
+                found++;
+            }
+            thread->stats.FinishedSingleOp();
+        }
+        char msg[100];
+        snprintf(msg, sizeof(msg), "(%d of %d found)", found, num_);
+        thread->stats.AddMessage(msg);
+    }
+
+    void ReadMissing(ThreadState* thread) {
     ReadOptions options;
     std::string value;
     for (int i = 0; i < reads_; i++) {
@@ -824,6 +900,17 @@ class Benchmark {
       thread->stats.FinishedSingleOp();
     }
   }
+
+    void ReadMissingSnapshot(ThreadState* thread) {
+        std::string value;
+        for (int i = 0; i < reads_; i++) {
+            char key[100];
+            const int k = thread->rand.Next() % FLAGS_num;
+            snprintf(key, sizeof(key), "%016d.", k);
+            db_->Get(read_options_, key, &value);
+            thread->stats.FinishedSingleOp();
+        }
+    }
 
   void ReadHot(ThreadState* thread) {
     ReadOptions options;
@@ -855,6 +942,23 @@ class Benchmark {
     snprintf(msg, sizeof(msg), "(%d of %d found)", found, num_);
     thread->stats.AddMessage(msg);
   }
+
+    void SeekRandomSnapshot(ThreadState* thread) {
+        int found = 0;
+        for (int i = 0; i < reads_; i++) {
+            Iterator* iter = db_->NewIterator(read_options_);
+            char key[100];
+            const int k = thread->rand.Next() % FLAGS_num;
+            snprintf(key, sizeof(key), "%016d", k);
+            iter->Seek(key);
+            if (iter->Valid() && iter->key() == key) found++;
+            delete iter;
+            thread->stats.FinishedSingleOp();
+        }
+        char msg[100];
+        snprintf(msg, sizeof(msg), "(%d of %d found)", found, num_);
+        thread->stats.AddMessage(msg);
+    }
 
   void DoDelete(ThreadState* thread, bool seq) {
     RandomGenerator gen;
@@ -914,6 +1018,36 @@ class Benchmark {
       thread->stats.Start();
     }
   }
+
+    void ReadSnapshotWhileWriting(ThreadState* thread) {
+        if (thread->tid > 0) {
+            ReadRandomSnapshot(thread);
+        } else {
+            // Special thread that keeps writing until other threads are done.
+            RandomGenerator gen;
+            while (true) {
+                {
+                    MutexLock l(&thread->shared->mu);
+                    if (thread->shared->num_done + 1 >= thread->shared->num_initialized) {
+                        // Other threads have finished
+                        break;
+                    }
+                }
+
+                const int k = thread->rand.Next() % FLAGS_num;
+                char key[100];
+                snprintf(key, sizeof(key), "%016d", k);
+                Status s = db_->Put(write_options_, key, gen.Generate(value_size_));
+                if (!s.ok()) {
+                    fprintf(stderr, "put error: %s\n", s.ToString().c_str());
+                    exit(1);
+                }
+            }
+
+            // Do not count any of the preceding work/delay in stats.
+            thread->stats.Start();
+        }
+    }
 
   void Compact(ThreadState* thread) {
     db_->CompactRange(nullptr, nullptr);
