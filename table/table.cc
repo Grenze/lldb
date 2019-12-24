@@ -50,6 +50,10 @@ Status Table::Open(const Options& options,
                         &footer_input, footer_space);
   if (!s.ok()) return s;
 
+  // profile here.
+  cache_profiles::read_index_meta_times++;
+  cache_profiles::read_index_meta_len += footer_input.size();
+
   Footer footer;
   s = footer.DecodeFrom(&footer_input);
   if (!s.ok()) return s;
@@ -61,7 +65,7 @@ Status Table::Open(const Options& options,
     if (options.paranoid_checks) {
       opt.verify_checksums = true;
     }
-    s = ReadBlock(file, opt, footer.index_handle(), &index_block_contents);
+    s = ReadBlock(file, opt, footer.index_handle(), &index_block_contents, cache_profiles::IndexAndMeta);
   }
 
   if (s.ok()) {
@@ -95,7 +99,7 @@ void Table::ReadMeta(const Footer& footer) {
     opt.verify_checksums = true;
   }
   BlockContents contents;
-  if (!ReadBlock(rep_->file, opt, footer.metaindex_handle(), &contents).ok()) {
+  if (!ReadBlock(rep_->file, opt, footer.metaindex_handle(), &contents, cache_profiles::IndexAndMeta).ok()) {
     // Do not propagate errors since meta info is not needed for operation
     return;
   }
@@ -126,7 +130,7 @@ void Table::ReadFilter(const Slice& filter_handle_value) {
     opt.verify_checksums = true;
   }
   BlockContents block;
-  if (!ReadBlock(rep_->file, opt, filter_handle, &block).ok()) {
+  if (!ReadBlock(rep_->file, opt, filter_handle, &block, cache_profiles::IndexAndMeta).ok()) {
     return;
   }
   if (block.heap_allocated) {
@@ -158,7 +162,8 @@ static void ReleaseBlock(void* arg, void* h) {
 // into an iterator over the contents of the corresponding block.
 Iterator* Table::BlockReader(void* arg,
                              const ReadOptions& options,
-                             const Slice& index_value) {
+                             const Slice& index_value,
+                             cache_profiles::parameter_padding pp) {
   Table* table = reinterpret_cast<Table*>(arg);
   Cache* block_cache = table->rep_->options.block_cache;
   Block* block = nullptr;
@@ -178,10 +183,23 @@ Iterator* Table::BlockReader(void* arg,
       EncodeFixed64(cache_key_buffer+8, handle.offset());
       Slice key(cache_key_buffer, sizeof(cache_key_buffer));
       cache_handle = block_cache->Lookup(key);
+      // profile here.
+      cache_profiles::data_cache_times++;
+      if (pp == cache_profiles::InternalGet) {
+          cache_profiles::get_data_cache_access_times++;
+      } else if (pp == cache_profiles::Table_NewIterator) {
+          cache_profiles::iter_data_cache_access_times++;
+      }
       if (cache_handle != nullptr) {
         block = reinterpret_cast<Block*>(block_cache->Value(cache_handle));
       } else {
-        s = ReadBlock(table->rep_->file, options, handle, &contents);
+        cache_profiles::data_cache_miss++;
+        if (pp == cache_profiles::InternalGet) {
+            cache_profiles::get_data_cache_miss++;
+        } else if (pp == cache_profiles::Table_NewIterator) {
+            cache_profiles::iter_data_cache_miss++;
+        }
+        s = ReadBlock(table->rep_->file, options, handle, &contents, pp);
         if (s.ok()) {
           block = new Block(contents);
           if (contents.cachable && options.fill_cache) {
@@ -191,7 +209,7 @@ Iterator* Table::BlockReader(void* arg,
         }
       }
     } else {
-      s = ReadBlock(table->rep_->file, options, handle, &contents);
+      s = ReadBlock(table->rep_->file, options, handle, &contents, pp);
       if (s.ok()) {
         block = new Block(contents);
       }
@@ -215,7 +233,7 @@ Iterator* Table::BlockReader(void* arg,
 Iterator* Table::NewIterator(const ReadOptions& options) const {
   return NewTwoLevelIterator(
       rep_->index_block->NewIterator(rep_->options.comparator),
-      &Table::BlockReader, const_cast<Table*>(this), options);
+      &Table::BlockReader, const_cast<Table*>(this), options, cache_profiles::Table_NewIterator);
 }
 
 Status Table::InternalGet(const ReadOptions& options, const Slice& k,
@@ -233,7 +251,7 @@ Status Table::InternalGet(const ReadOptions& options, const Slice& k,
         !filter->KeyMayMatch(handle.offset(), k)) {
       // Not found
     } else {
-      Iterator* block_iter = BlockReader(this, options, iiter->value());
+      Iterator* block_iter = BlockReader(this, options, iiter->value(), cache_profiles::InternalGet);
       block_iter->Seek(k);
       if (block_iter->Valid()) {
         (*saver)(arg, block_iter->key(), block_iter->value());

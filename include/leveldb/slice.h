@@ -20,6 +20,7 @@
 #include <string.h>
 #include <string>
 #include "leveldb/export.h"
+#include "util/global_profiles.h"
 
 namespace leveldb {
 

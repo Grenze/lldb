@@ -44,8 +44,10 @@ static const char* FLAGS_benchmarks =
         "fillseq,"
         //"snapshot,"
         "readwhilewriting,"
+        "printprofile,"
         //"readsnapshotwhilewriting,"
-        "fillsync,"
+        //"fillsync,"
+        "clearprofile,"
         "fillrandom,"
         //"snapshot,"
         //"overwrite,"
@@ -54,13 +56,14 @@ static const char* FLAGS_benchmarks =
         "readrandom,"
         //"readrandomsnapshot,"
         "readmissing,"
+        "printprofile"
         //"readmissingsnapshot,"
         //"readrandom,"  // Extra run to allow previous compactions to quiesce
-        "readseq,"
+        //"readseq,"
         //"readseqsnapshot,"
-        "readreverse,"
+        //"readreverse,"
         //"readreversesnapshot,"
-        "seekrandom,"
+        //"seekrandom,"
         //"seekrandomsnapshot,"
         //"compact,"  // compact the entire db
         //"readrandom,"
@@ -124,6 +127,9 @@ static bool FLAGS_reuse_logs = false;
 
 // Use the db with the following name.
 static const char* FLAGS_db = nullptr;
+
+// write thread setting in readwhilewriting
+static size_t FLAGS_write_threads = 1;
 
 namespace leveldb {
 
@@ -533,7 +539,8 @@ class Benchmark {
       } else if (name == Slice("deleterandom")) {
         method = &Benchmark::DeleteRandom;
       } else if (name == Slice("readwhilewriting")) {
-        num_threads++;  // Add extra thread for writing
+        //num_threads++;  // Add extra thread for writing
+        num_threads += FLAGS_write_threads;
         method = &Benchmark::ReadWhileWriting;
       } else if(name == Slice("readsnapshotwhilewriting")) {
           method = &Benchmark::ReadSnapshotWhileWriting;
@@ -549,8 +556,12 @@ class Benchmark {
         method = &Benchmark::SnappyUncompress;
       } else if (name == Slice("heapprofile")) {
         HeapProfile();
+      } else if (name == Slice("clearprofile")) {
+        ClearProfile();
+      } else if (name == Slice("printprofile")) {
+          PrintProfile();
       } else if (name == Slice("stats")) {
-        PrintStats("leveldb.stats");
+              PrintStats("leveldb.stats");
       } else if (name == Slice("sstables")) {
         PrintStats("leveldb.sstables");
       } else {
@@ -990,7 +1001,8 @@ class Benchmark {
   }
 
   void ReadWhileWriting(ThreadState* thread) {
-    if (thread->tid > 0) {
+    //if (thread->tid > 0) {
+    if (thread->tid > FLAGS_write_threads - 1) {
       ReadRandom(thread);
     } else {
       // Special thread that keeps writing until other threads are done.
@@ -1081,6 +1093,15 @@ class Benchmark {
       g_env->DeleteFile(fname);
     }
   }
+
+  void ClearProfile() {
+      cache_profiles::Clear();
+  }
+
+  void PrintProfile() {
+      cache_profiles::Message(std::cout);
+  }
+
 };
 
 }  // namespace leveldb
@@ -1129,8 +1150,10 @@ int main(int argc, char** argv) {
       FLAGS_bloom_bits = n;
     } else if (sscanf(argv[i], "--open_files=%d%c", &n, &junk) == 1) {
       FLAGS_open_files = n;
+    } else if (sscanf(argv[i], "--write_threads=%d%c", &n, &junk) == 1) {
+        FLAGS_write_threads = n;
     } else if (strncmp(argv[i], "--db=", 5) == 0) {
-      FLAGS_db = argv[i] + 5;
+            FLAGS_db = argv[i] + 5;
     } else {
       fprintf(stderr, "Invalid flag '%s'\n", argv[i]);
       exit(1);

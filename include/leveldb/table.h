@@ -64,7 +64,7 @@ class LEVELDB_EXPORT Table {
   Rep* rep_;
 
   explicit Table(Rep* rep) { rep_ = rep; }
-  static Iterator* BlockReader(void*, const ReadOptions&, const Slice&);
+  static Iterator* BlockReader(void*, const ReadOptions&, const Slice&, cache_profiles::parameter_padding);
 
   // Calls (*handle_result)(arg, ...) with the entry found after a call
   // to Seek(key).  May not make such a call if filter policy says

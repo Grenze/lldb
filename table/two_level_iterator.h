@@ -25,9 +25,11 @@ Iterator* NewTwoLevelIterator(
     Iterator* (*block_function)(
         void* arg,
         const ReadOptions& options,
-        const Slice& index_value),
+        const Slice& index_value,
+        cache_profiles::parameter_padding),
     void* arg,
-    const ReadOptions& options);
+    const ReadOptions& options,
+    cache_profiles::parameter_padding pp);
 
 }  // namespace leveldb
 

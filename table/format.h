@@ -94,7 +94,8 @@ struct BlockContents {
 Status ReadBlock(RandomAccessFile* file,
                  const ReadOptions& options,
                  const BlockHandle& handle,
-                 BlockContents* result);
+                 BlockContents* result,
+                 cache_profiles::parameter_padding pp);
 
 // Implementation details follow.  Clients should ignore,
 

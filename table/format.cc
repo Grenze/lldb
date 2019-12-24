@@ -65,7 +65,8 @@ Status Footer::DecodeFrom(Slice* input) {
 Status ReadBlock(RandomAccessFile* file,
                  const ReadOptions& options,
                  const BlockHandle& handle,
-                 BlockContents* result) {
+                 BlockContents* result,
+                 cache_profiles::parameter_padding pp) {
   result->data = Slice();
   result->cachable = false;
   result->heap_allocated = false;
@@ -95,6 +96,19 @@ Status ReadBlock(RandomAccessFile* file,
       s = Status::Corruption("block checksum mismatch");
       return s;
     }
+  }
+  // profile here.
+  cache_profiles::ReadBlock_times ++;
+  cache_profiles::ReadBlock_len += contents.size();
+  if (pp == cache_profiles::IndexAndMeta) {
+      // do not forget footer.
+      cache_profiles::read_index_meta_len += contents.size();
+  } else if (pp == cache_profiles::InternalGet) {
+      cache_profiles::get_data_block_times++;
+      cache_profiles::get_data_block_len += contents.size();
+  } else if (pp == cache_profiles::Table_NewIterator) {
+      cache_profiles::iter_data_block_times++;
+      cache_profiles::iter_data_block_len += contents.size();
   }
 
   switch (data[n]) {

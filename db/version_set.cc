@@ -221,7 +221,8 @@ class Version::LevelFileNumIterator : public Iterator {
 // file_value: file_number file_size
 static Iterator* GetFileIterator(void* arg,
                                  const ReadOptions& options,
-                                 const Slice& file_value) {
+                                 const Slice& file_value,
+                                 cache_profiles::parameter_padding) {
   TableCache* cache = reinterpret_cast<TableCache*>(arg);
   if (file_value.size() != 16) {
     return NewErrorIterator(
@@ -237,7 +238,7 @@ Iterator* Version::NewConcatenatingIterator(const ReadOptions& options,
                                             int level) const {
   return NewTwoLevelIterator(
       new LevelFileNumIterator(vset_->icmp_, &files_[level]),
-      &GetFileIterator, vset_->table_cache_, options);
+      &GetFileIterator, vset_->table_cache_, options, cache_profiles::GetFileIterator);
 }
 
 void Version::AddIterators(const ReadOptions& options,
@@ -1301,7 +1302,7 @@ Iterator* VersionSet::MakeInputIterator(Compaction* c) {
         // Create concatenating iterator for the files from this level
         list[num++] = NewTwoLevelIterator(
             new Version::LevelFileNumIterator(icmp_, &c->inputs_[which]),
-            &GetFileIterator, table_cache_, options);
+            &GetFileIterator, table_cache_, options, cache_profiles::GetFileIterator);
       }
     }
   }

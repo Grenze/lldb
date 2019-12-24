@@ -171,6 +171,9 @@ class PosixRandomAccessFile: public RandomAccessFile {
     Status s;
     ssize_t r = pread(fd, scratch, n, static_cast<off_t>(offset));
     *result = Slice(scratch, (r < 0) ? 0 : r);
+    // profile here.
+    cache_profiles::env_file_read_times ++;
+    cache_profiles::env_file_read_len += result->size();
     if (r < 0) {
       // An error: return a non-ok status
       s = PosixError(filename_, errno);
@@ -212,6 +215,9 @@ class PosixMmapReadableFile: public RandomAccessFile {
       s = PosixError(filename_, EINVAL);
     } else {
       *result = Slice(reinterpret_cast<char*>(mmapped_region_) + offset, n);
+      // profile here.
+      cache_profiles::env_file_read_times ++;
+      cache_profiles::env_file_read_len += result->size();
     }
     return s;
   }
