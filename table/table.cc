@@ -51,8 +51,8 @@ Status Table::Open(const Options& options,
   if (!s.ok()) return s;
 
   // profile here.
-  cache_profiles::read_index_meta_times++;
-  cache_profiles::read_index_meta_len += footer_input.size();
+  cache_profiles::read_footer_times++;
+  cache_profiles::read_footer_len += footer_input.size();
 
   Footer footer;
   s = footer.DecodeFrom(&footer_input);
@@ -184,13 +184,19 @@ Iterator* Table::BlockReader(void* arg,
       Slice key(cache_key_buffer, sizeof(cache_key_buffer));
       cache_handle = block_cache->Lookup(key);
       // profile here.
-      cache_profiles::data_cache_times++;
+      cache_profiles::data_cache_access_times++;
       if (pp == cache_profiles::InternalGet) {
           cache_profiles::get_data_cache_access_times++;
       } else if (pp == cache_profiles::Table_NewIterator) {
           cache_profiles::iter_data_cache_access_times++;
       }
       if (cache_handle != nullptr) {
+          cache_profiles::data_cache_hit++;
+          if (pp == cache_profiles::InternalGet) {
+              cache_profiles::get_data_cache_hit++;
+          } else if (pp == cache_profiles::Table_NewIterator) {
+              cache_profiles::iter_data_cache_hit++;
+          }
         block = reinterpret_cast<Block*>(block_cache->Value(cache_handle));
       } else {
         cache_profiles::data_cache_miss++;
@@ -209,6 +215,7 @@ Iterator* Table::BlockReader(void* arg,
         }
       }
     } else {
+        assert(false);
       s = ReadBlock(table->rep_->file, options, handle, &contents, pp);
       if (s.ok()) {
         block = new Block(contents);

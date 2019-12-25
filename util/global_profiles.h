@@ -6,31 +6,36 @@
 #define LEVELDB_GLOBAL_PROFILES_H
 
 #include <iostream>
-
+#include <atomic>
 namespace cache_profiles {
 
-extern uint64_t env_file_write_times;
-extern uint64_t env_file_write_len;
+extern std::atomic<uint64_t> env_file_write_times;
+extern std::atomic<uint64_t> env_file_write_len;
 
-extern uint64_t env_file_read_times;
-extern uint64_t env_file_read_len;
-extern uint64_t ReadBlock_times;
-extern uint64_t ReadBlock_len;
-extern uint64_t read_index_meta_times;
-extern uint64_t read_index_meta_len;
-extern uint64_t get_data_block_times;
-extern uint64_t get_data_block_len;
-extern uint64_t iter_data_block_times;
-extern uint64_t iter_data_block_len;
+extern std::atomic<uint64_t> env_file_read_times;
+extern std::atomic<uint64_t> env_file_read_len;
+extern std::atomic<uint64_t> ReadBlock_times;
+extern std::atomic<uint64_t> ReadBlock_len;
+extern std::atomic<uint64_t> read_footer_times;
+extern std::atomic<uint64_t> read_footer_len;
+extern std::atomic<uint64_t> read_index_meta_times;
+extern std::atomic<uint64_t> read_index_meta_len;
+extern std::atomic<uint64_t> get_data_block_times;
+extern std::atomic<uint64_t> get_data_block_len;
+extern std::atomic<uint64_t> iter_data_block_times;
+extern std::atomic<uint64_t> iter_data_block_len;
 
-extern uint64_t get_data_cache_access_times;
-extern uint64_t get_data_cache_miss;
+extern std::atomic<uint64_t> get_data_cache_access_times;
+extern std::atomic<uint64_t> get_data_cache_miss;
+extern std::atomic<uint64_t> get_data_cache_hit;
 
-extern uint64_t iter_data_cache_access_times;
-extern uint64_t iter_data_cache_miss;
+extern std::atomic<uint64_t> iter_data_cache_access_times;
+extern std::atomic<uint64_t> iter_data_cache_miss;
+extern std::atomic<uint64_t> iter_data_cache_hit;
 
-extern uint64_t data_cache_times;
-extern uint64_t data_cache_miss;
+extern std::atomic<uint64_t> data_cache_access_times;
+extern std::atomic<uint64_t> data_cache_miss;
+extern std::atomic<uint64_t> data_cache_hit;
 
 inline static void Clear() {
     env_file_write_times = 0;
@@ -40,6 +45,8 @@ inline static void Clear() {
     env_file_read_len = 0;
     ReadBlock_times = 0;
     ReadBlock_len = 0;
+    read_footer_times = 0;
+    read_footer_len = 0;
     read_index_meta_times = 0;
     read_index_meta_len = 0;
     get_data_block_times = 0;
@@ -49,12 +56,15 @@ inline static void Clear() {
 
     get_data_cache_access_times = 0;
     get_data_cache_miss = 0;
+    get_data_cache_hit = 0;
 
     iter_data_cache_access_times = 0;
     iter_data_cache_miss = 0;
+    iter_data_cache_hit = 0;
 
-    data_cache_times = 0;
+    data_cache_access_times = 0;
     data_cache_miss = 0;
+    data_cache_hit = 0;
 }
 
 inline static void Message(std::ostream& os) {
@@ -64,6 +74,8 @@ inline static void Message(std::ostream& os) {
     "env_file_read_len: \t" << env_file_read_len << "\n" <<
     "ReadBlock_times: \t" << ReadBlock_times << "\n" <<
     "ReadBlock_len: \t" << ReadBlock_len << "\n" <<
+    "read_footer_times: \t" << read_footer_times << "\n" <<
+    "read_footer_len: \t" << read_footer_len << "\n" <<
     "read_index_meta_times: \t" << read_index_meta_times << "\n" <<
     "read_index_meta_len: \t" << read_index_meta_len << "\n" <<
     "get_data_block_times: \t" << get_data_block_times << "\n" <<
@@ -72,17 +84,20 @@ inline static void Message(std::ostream& os) {
     "iter_data_block_len: \t" << iter_data_block_len << "\n" <<
     "get_data_cache_access_times: \t" << get_data_cache_access_times << "\n" <<
     "get_data_cache_miss: \t" << get_data_cache_miss << "\n" <<
+    "get_data_cache_hit: \t" << get_data_cache_hit << "\n" <<
     "iter_data_cache_access_times: \t" << iter_data_cache_access_times << "\n" <<
     "iter_data_cache_miss: \t" << iter_data_cache_miss << "\n" <<
-    "data_cache_times: \t" << data_cache_times << "\n" <<
-    "data_cache_miss: \t" << data_cache_miss << "\n";
+    "iter_data_cache_hit: \t" << iter_data_cache_hit << "\n" <<
+    "data_cache_access_times: \t" << data_cache_access_times << "\n" <<
+    "data_cache_miss: \t" << data_cache_miss << "\n" <<
+    "data_cache_hit: \t" << data_cache_hit << "\n";
 }
 
 enum parameter_padding {
-    IndexAndMeta,
-    InternalGet,
-    Table_NewIterator,
-    GetFileIterator
+    IndexAndMeta = 0,
+    InternalGet = 1,
+    Table_NewIterator = 2,
+    GetFileIterator = 3
 };
 
 }

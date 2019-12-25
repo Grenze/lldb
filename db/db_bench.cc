@@ -18,28 +18,33 @@
 #include "util/testutil.h"
 #include "util/global_profiles.h"
 
-uint64_t cache_profiles::env_file_write_times;
-uint64_t cache_profiles::env_file_write_len;
+std::atomic<uint64_t> cache_profiles::env_file_write_times;
+std::atomic<uint64_t> cache_profiles::env_file_write_len;
 
-uint64_t cache_profiles::env_file_read_times;
-uint64_t cache_profiles::env_file_read_len;
-uint64_t cache_profiles::ReadBlock_times;
-uint64_t cache_profiles::ReadBlock_len;
-uint64_t cache_profiles::read_index_meta_times;
-uint64_t cache_profiles::read_index_meta_len;
-uint64_t cache_profiles::get_data_block_times;
-uint64_t cache_profiles::get_data_block_len;
-uint64_t cache_profiles::iter_data_block_times;
-uint64_t cache_profiles::iter_data_block_len;
+std::atomic<uint64_t> cache_profiles::env_file_read_times;
+std::atomic<uint64_t> cache_profiles::env_file_read_len;
+std::atomic<uint64_t> cache_profiles::ReadBlock_times;
+std::atomic<uint64_t> cache_profiles::ReadBlock_len;
+std::atomic<uint64_t> cache_profiles::read_footer_times;
+std::atomic<uint64_t> cache_profiles::read_footer_len;
+std::atomic<uint64_t> cache_profiles::read_index_meta_times;
+std::atomic<uint64_t> cache_profiles::read_index_meta_len;
+std::atomic<uint64_t> cache_profiles::get_data_block_times;
+std::atomic<uint64_t> cache_profiles::get_data_block_len;
+std::atomic<uint64_t> cache_profiles::iter_data_block_times;
+std::atomic<uint64_t> cache_profiles::iter_data_block_len;
 
-uint64_t cache_profiles::get_data_cache_access_times;
-uint64_t cache_profiles::get_data_cache_miss;
+std::atomic<uint64_t> cache_profiles::get_data_cache_access_times;
+std::atomic<uint64_t> cache_profiles::get_data_cache_miss;
+std::atomic<uint64_t> cache_profiles::get_data_cache_hit;
 
-uint64_t cache_profiles::iter_data_cache_access_times;
-uint64_t cache_profiles::iter_data_cache_miss;
+std::atomic<uint64_t> cache_profiles::iter_data_cache_access_times;
+std::atomic<uint64_t> cache_profiles::iter_data_cache_miss;
+std::atomic<uint64_t> cache_profiles::iter_data_cache_hit;
 
-uint64_t cache_profiles::data_cache_times;
-uint64_t cache_profiles::data_cache_miss;
+std::atomic<uint64_t> cache_profiles::data_cache_access_times;
+std::atomic<uint64_t> cache_profiles::data_cache_miss;
+std::atomic<uint64_t> cache_profiles::data_cache_hit;
 
 // Comma-separated list of operations to run in the specified order
 //   Actual benchmarks:
