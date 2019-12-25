@@ -8,6 +8,7 @@
 #include "table/block.h"
 #include "table/format.h"
 #include "table/iterator_wrapper.h"
+#include "util/global_profiles.h"
 
 namespace leveldb {
 
