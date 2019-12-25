@@ -27,8 +27,8 @@ std::atomic<uint64_t> cache_profiles::ReadBlock_times;
 std::atomic<uint64_t> cache_profiles::ReadBlock_len;
 std::atomic<uint64_t> cache_profiles::read_footer_times;
 std::atomic<uint64_t> cache_profiles::read_footer_len;
-std::atomic<uint64_t> cache_profiles::read_index_meta_times;
-std::atomic<uint64_t> cache_profiles::read_index_meta_len;
+std::atomic<uint64_t> cache_profiles::read_index_meta_block_times;
+std::atomic<uint64_t> cache_profiles::read_index_meta_block_len;
 std::atomic<uint64_t> cache_profiles::get_data_block_times;
 std::atomic<uint64_t> cache_profiles::get_data_block_len;
 std::atomic<uint64_t> cache_profiles::iter_data_block_times;
@@ -72,21 +72,23 @@ std::atomic<uint64_t> cache_profiles::data_cache_hit;
 static const char* FLAGS_benchmarks =
         "clearprofile,"
         "fillseq,"
+        "printprofile,"
         //"snapshot,"
+        "clearprofile,"
         "readwhilewriting,"
         "printprofile,"
         //"readsnapshotwhilewriting,"
         //"fillsync,"
-        "clearprofile,"
-        "fillrandom,"
+        //"clearprofile,"
+        //"fillrandom,"
         //"snapshot,"
         //"overwrite,"
         //"overwrite,"
-        "overwrite,"
-        "readrandom,"
+        //"overwrite,"
+        //"readrandom,"
         //"readrandomsnapshot,"
         //"readmissing,"
-        "printprofile"
+        //"printprofile"
         //"readmissingsnapshot,"
         //"readrandom,"  // Extra run to allow previous compactions to quiesce
         //"readseq,"

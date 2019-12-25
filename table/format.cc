@@ -102,8 +102,8 @@ Status ReadBlock(RandomAccessFile* file,
   cache_profiles::ReadBlock_len += contents.size();
   if (pp == cache_profiles::IndexAndMeta) {
       // do not forget footer.
-      cache_profiles::read_index_meta_times++;
-      cache_profiles::read_index_meta_len += contents.size();
+      cache_profiles::read_index_meta_block_times++;
+      cache_profiles::read_index_meta_block_len += contents.size();
   } else if (pp == cache_profiles::InternalGet) {
       cache_profiles::get_data_block_times++;
       cache_profiles::get_data_block_len += contents.size();
