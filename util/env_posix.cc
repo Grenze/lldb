@@ -224,30 +224,6 @@ class PosixMmapReadableFile: public RandomAccessFile {
   }
 };
 
-
-#define CPU_FREQ_MHZ 900.026 // cat /proc/cpuinfo
-
-#define CACHE_LINE_SIZE 64
-
-static uint64_t WRITE_LATENCY_IN_NS = 500;
-
-static inline void cpu_pause() {
-    __asm__ volatile ("pause" ::: "memory");
-}
-
-static inline unsigned long read_tsc() {
-    unsigned long var;
-    unsigned int hi, lo;
-    asm volatile ("rdtsc" : "=a" (lo), "=d" (hi));
-    var = ((unsigned long long int) hi << 32) | lo;
-    return var;
-}
-
-inline void mfence() {
-    asm volatile("mfence":::"memory");
-}
-
-
 class PosixWritableFile final : public WritableFile {
  public:
   PosixWritableFile(std::string filename, int fd)
@@ -330,8 +306,6 @@ class PosixWritableFile final : public WritableFile {
   }
 
   Status WriteUnbuffered(const char* data, size_t size) {
-    mfence();
-    unsigned long etsc = read_tsc() + (size/CACHE_LINE_SIZE+1)*(unsigned long)(WRITE_LATENCY_IN_NS*CPU_FREQ_MHZ/1000);
     while (size > 0) {
       ssize_t write_result = ::write(fd_, data, size);
       if (write_result < 0) {
@@ -340,13 +314,11 @@ class PosixWritableFile final : public WritableFile {
         }
         return PosixError(filename_, errno);
       }
+      cache_profiles::env_file_write_times++;
+      cache_profiles::env_file_write_len += write_result;
       data += write_result;
       size -= write_result;
     }
-    while (read_tsc() < etsc) {
-      cpu_pause();
-    }
-    mfence();
     return Status::OK();
   }
 

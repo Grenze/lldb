@@ -9,6 +9,9 @@
 
 namespace cache_profiles {
 
+extern uint64_t env_file_write_times;
+extern uint64_t env_file_write_len;
+
 extern uint64_t env_file_read_times;
 extern uint64_t env_file_read_len;
 extern uint64_t ReadBlock_times;
@@ -30,29 +33,34 @@ extern uint64_t data_cache_times;
 extern uint64_t data_cache_miss;
 
 inline static void Clear() {
-    env_file_read_times;
-    env_file_read_len;
-    ReadBlock_times;
-    ReadBlock_len;
-    read_index_meta_times;
-    read_index_meta_len;
-    get_data_block_times;
-    get_data_block_len;
-    iter_data_block_times;
-    iter_data_block_len;
+    env_file_write_times = 0;
+    env_file_write_len = 0;
 
-    get_data_cache_access_times;
-    get_data_cache_miss;
+    env_file_read_times = 0;
+    env_file_read_len = 0;
+    ReadBlock_times = 0;
+    ReadBlock_len = 0;
+    read_index_meta_times = 0;
+    read_index_meta_len = 0;
+    get_data_block_times = 0;
+    get_data_block_len = 0;
+    iter_data_block_times = 0;
+    iter_data_block_len = 0;
 
-    iter_data_cache_access_times;
-    iter_data_cache_miss;
+    get_data_cache_access_times = 0;
+    get_data_cache_miss = 0;
 
-    data_cache_times;
-    data_cache_miss;
+    iter_data_cache_access_times = 0;
+    iter_data_cache_miss = 0;
+
+    data_cache_times = 0;
+    data_cache_miss = 0;
 }
 
 inline static void Message(std::ostream& os) {
-    os << "env_file_read_times: \t" << env_file_read_times << "\n" <<
+    os << "env_file_write_times: \t" << env_file_write_times << "\n" <<
+    "env_file_write_len: \t" << env_file_write_len << "\n" <<
+    "env_file_read_times: \t" << env_file_read_times << "\n" <<
     "env_file_read_len: \t" << env_file_read_len << "\n" <<
     "ReadBlock_times: \t" << ReadBlock_times << "\n" <<
     "ReadBlock_len: \t" << ReadBlock_len << "\n" <<

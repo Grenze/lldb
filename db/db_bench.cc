@@ -18,6 +18,9 @@
 #include "util/testutil.h"
 #include "util/global_profiles.h"
 
+uint64_t cache_profiles::env_file_write_times;
+uint64_t cache_profiles::env_file_write_len;
+
 uint64_t cache_profiles::env_file_read_times;
 uint64_t cache_profiles::env_file_read_len;
 uint64_t cache_profiles::ReadBlock_times;
@@ -62,6 +65,7 @@ uint64_t cache_profiles::data_cache_miss;
 //      sstables    -- Print sstable info
 //      heapprofile -- Dump a heap profile (if supported by this port)
 static const char* FLAGS_benchmarks =
+        "clearprofile,"
         "fillseq,"
         //"snapshot,"
         "readwhilewriting,"
@@ -76,7 +80,7 @@ static const char* FLAGS_benchmarks =
         "overwrite,"
         "readrandom,"
         //"readrandomsnapshot,"
-        "readmissing,"
+        //"readmissing,"
         "printprofile"
         //"readmissingsnapshot,"
         //"readrandom,"  // Extra run to allow previous compactions to quiesce
