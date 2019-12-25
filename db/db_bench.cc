@@ -16,6 +16,27 @@
 #include "util/mutexlock.h"
 #include "util/random.h"
 #include "util/testutil.h"
+#include "util/global_profiles.h"
+
+uint64_t cache_profiles::env_file_read_times;
+uint64_t cache_profiles::env_file_read_len;
+uint64_t cache_profiles::ReadBlock_times;
+uint64_t cache_profiles::ReadBlock_len;
+uint64_t cache_profiles::read_index_meta_times;
+uint64_t cache_profiles::read_index_meta_len;
+uint64_t cache_profiles::get_data_block_times;
+uint64_t cache_profiles::get_data_block_len;
+uint64_t cache_profiles::iter_data_block_times;
+uint64_t cache_profiles::iter_data_block_len;
+
+uint64_t cache_profiles::get_data_cache_access_times;
+uint64_t cache_profiles::get_data_cache_miss;
+
+uint64_t cache_profiles::iter_data_cache_access_times;
+uint64_t cache_profiles::iter_data_cache_miss;
+
+uint64_t cache_profiles::data_cache_times;
+uint64_t cache_profiles::data_cache_miss;
 
 // Comma-separated list of operations to run in the specified order
 //   Actual benchmarks:

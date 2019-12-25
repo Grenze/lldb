@@ -10,6 +10,7 @@
 #include "leveldb/slice.h"
 #include "leveldb/status.h"
 #include "leveldb/table_builder.h"
+#include "util/global_profiles.h"
 
 namespace leveldb {
 

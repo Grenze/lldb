@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include "leveldb/export.h"
 #include "leveldb/iterator.h"
+#include "util/global_profiles.h"
 
 namespace leveldb {
 
