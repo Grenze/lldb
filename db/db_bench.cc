@@ -114,7 +114,7 @@ static int FLAGS_num = 100000;
 static int FLAGS_reads = -1;
 
 // Number of concurrent threads to run.
-static int FLAGS_threads = 3;
+static int FLAGS_threads = 5;
 
 // Size of each value
 static int FLAGS_value_size = 100;
@@ -161,7 +161,7 @@ static bool FLAGS_reuse_logs = false;
 static const char* FLAGS_db = nullptr;
 
 // write thread setting in readwhilewriting
-static size_t FLAGS_write_threads = 1;
+static size_t FLAGS_write_threads = 5;
 
 namespace leveldb {
 
@@ -1042,7 +1042,7 @@ class Benchmark {
       while (true) {
         {
           MutexLock l(&thread->shared->mu);
-          if (thread->shared->num_done + 1 >= thread->shared->num_initialized) {
+          if (thread->shared->num_done + FLAGS_write_threads >= thread->shared->num_initialized) {
             // Other threads have finished
             break;
           }
