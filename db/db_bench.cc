@@ -71,10 +71,11 @@ std::atomic<uint64_t> cache_profiles::data_cache_hit;
 //      heapprofile -- Dump a heap profile (if supported by this port)
 static const char* FLAGS_benchmarks =
         "clearprofile,"
-        "fillseq,"
+        "fillrandom,"
         "printprofile,"
         //"snapshot,"
         "clearprofile,"
+        //"readrandom,"
         "readwhilewriting,"
         "printprofile,"
         //"readsnapshotwhilewriting,"
@@ -114,10 +115,10 @@ static int FLAGS_num = 100000;
 static int FLAGS_reads = -1;
 
 // Number of concurrent threads to run.
-static int FLAGS_threads = 5;
+static int FLAGS_threads = 1;
 
 // Size of each value
-static int FLAGS_value_size = 100;
+static int FLAGS_value_size = 1000;
 
 // Arrange to generate values that shrink to this fraction of
 // their original size after compression
@@ -160,8 +161,10 @@ static bool FLAGS_reuse_logs = false;
 // Use the db with the following name.
 static const char* FLAGS_db = nullptr;
 
-// write thread setting in readwhilewriting
-static size_t FLAGS_write_threads = 5;
+// write thread setting in readwhilewriting,
+// less than FLAGS_threads but greater than 1,
+// FLAGS_threads >= 2.
+static size_t FLAGS_write_threads = 1;
 
 namespace leveldb {
 
@@ -572,7 +575,6 @@ class Benchmark {
         method = &Benchmark::DeleteRandom;
       } else if (name == Slice("readwhilewriting")) {
         //num_threads++;  // Add extra thread for writing
-        num_threads += FLAGS_write_threads;
         method = &Benchmark::ReadWhileWriting;
       } else if(name == Slice("readsnapshotwhilewriting")) {
           method = &Benchmark::ReadSnapshotWhileWriting;
