@@ -162,9 +162,8 @@ static bool FLAGS_reuse_logs = false;
 static const char* FLAGS_db = nullptr;
 
 // write thread setting in readwhilewriting,
-// less than FLAGS_threads but greater than 1,
-// FLAGS_threads >= 2.
-static size_t FLAGS_write_threads = 1;
+// [0, FLAGS_threads]
+static int FLAGS_write_threads = 0;
 
 namespace leveldb {
 
@@ -1039,8 +1038,9 @@ class Benchmark {
     if (thread->tid > FLAGS_write_threads - 1) {
       ReadRandom(thread);
     } else {
+        WriteRandom(thread);
       // Special thread that keeps writing until other threads are done.
-      RandomGenerator gen;
+      /*RandomGenerator gen;
       while (true) {
         {
           MutexLock l(&thread->shared->mu);
@@ -1061,7 +1061,7 @@ class Benchmark {
       }
 
       // Do not count any of the preceding work/delay in stats.
-      thread->stats.Start();
+      thread->stats.Start();*/
     }
   }
 
