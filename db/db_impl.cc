@@ -34,7 +34,7 @@
 #include "util/coding.h"
 #include "util/logging.h"
 #include "util/mutexlock.h"
-
+#include "util/global_profiles.h"
 
 #include <iostream>
 
@@ -1163,6 +1163,7 @@ int64_t DBImpl::TEST_MaxNextLevelOverlappingBytes() {
 Status DBImpl::Get(const ReadOptions& options,
                    const Slice& key,
                    std::string* value) {
+  uint64_t start_time = profiles::NowNanos();
   Status s;
   MutexLock l(&mutex_);
   SequenceNumber snapshot;
@@ -1205,6 +1206,7 @@ Status DBImpl::Get(const ReadOptions& options,
   mem->Unref();
   if (imm != nullptr) imm->Unref();
   current->Unref();
+  profiles::DBImpl_Get += (profiles::NowNanos() - start_time);
   return s;
 }
 

@@ -8,6 +8,7 @@
 #include "leveldb/env.h"
 #include "leveldb/table.h"
 #include "util/coding.h"
+#include "util/global_profiles.h"
 
 namespace leveldb {
 
@@ -44,6 +45,7 @@ TableCache::~TableCache() {
 
 Status TableCache::FindTable(uint64_t file_number, uint64_t file_size,
                              Cache::Handle** handle) {
+  uint64_t start_time = profiles::NowNanos();
   Status s;
   char buf[sizeof(file_number)];
   EncodeFixed64(buf, file_number);
@@ -76,6 +78,7 @@ Status TableCache::FindTable(uint64_t file_number, uint64_t file_size,
       *handle = cache_->Insert(key, tf, 1, &DeleteEntry);
     }
   }
+  profiles::find_table += (profiles::NowNanos() - start_time);
   return s;
 }
 
@@ -110,6 +113,7 @@ Status TableCache::Get(const ReadOptions& options,
                        const Slice& k,
                        void* arg,
                        void (*saver)(void*, const Slice&, const Slice&)) {
+  uint64_t start_time = profiles::NowNanos();
   Cache::Handle* handle = nullptr;
   Status s = FindTable(file_number, file_size, &handle);
   if (s.ok()) {
@@ -117,6 +121,7 @@ Status TableCache::Get(const ReadOptions& options,
     s = t->InternalGet(options, k, arg, saver);
     cache_->Release(handle);
   }
+  profiles::table_cache_Get += (profiles::NowNanos() - start_time);
   return s;
 }
 

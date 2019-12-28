@@ -10,7 +10,6 @@
 #include "leveldb/slice.h"
 #include "leveldb/status.h"
 #include "leveldb/table_builder.h"
-#include "util/global_profiles.h"
 
 namespace leveldb {
 
@@ -95,8 +94,7 @@ struct BlockContents {
 Status ReadBlock(RandomAccessFile* file,
                  const ReadOptions& options,
                  const BlockHandle& handle,
-                 BlockContents* result,
-                 cache_profiles::parameter_padding pp);
+                 BlockContents* result);
 
 // Implementation details follow.  Clients should ignore,
 

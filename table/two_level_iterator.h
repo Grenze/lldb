@@ -6,7 +6,6 @@
 #define STORAGE_LEVELDB_TABLE_TWO_LEVEL_ITERATOR_H_
 
 #include "leveldb/iterator.h"
-#include "util/global_profiles.h"
 
 namespace leveldb {
 
@@ -26,11 +25,9 @@ Iterator* NewTwoLevelIterator(
     Iterator* (*block_function)(
         void* arg,
         const ReadOptions& options,
-        const Slice& index_value,
-        cache_profiles::parameter_padding),
+        const Slice& index_value),
     void* arg,
-    const ReadOptions& options,
-    cache_profiles::parameter_padding pp);
+    const ReadOptions& options);
 
 }  // namespace leveldb
 

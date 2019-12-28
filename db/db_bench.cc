@@ -18,33 +18,22 @@
 #include "util/testutil.h"
 #include "util/global_profiles.h"
 
-std::atomic<uint64_t> cache_profiles::env_file_write_times;
-std::atomic<uint64_t> cache_profiles::env_file_write_len;
+std::atomic<uint64_t> profiles::DBImpl_Get;
 
-std::atomic<uint64_t> cache_profiles::env_file_read_times;
-std::atomic<uint64_t> cache_profiles::env_file_read_len;
-std::atomic<uint64_t> cache_profiles::ReadBlock_times;
-std::atomic<uint64_t> cache_profiles::ReadBlock_len;
-std::atomic<uint64_t> cache_profiles::read_footer_times;
-std::atomic<uint64_t> cache_profiles::read_footer_len;
-std::atomic<uint64_t> cache_profiles::read_index_meta_block_times;
-std::atomic<uint64_t> cache_profiles::read_index_meta_block_len;
-std::atomic<uint64_t> cache_profiles::get_data_block_times;
-std::atomic<uint64_t> cache_profiles::get_data_block_len;
-std::atomic<uint64_t> cache_profiles::iter_data_block_times;
-std::atomic<uint64_t> cache_profiles::iter_data_block_len;
+std::atomic<uint64_t> profiles::mems_Get;
+std::atomic<uint64_t> profiles::Version_Get;
 
-std::atomic<uint64_t> cache_profiles::get_data_cache_access_times;
-std::atomic<uint64_t> cache_profiles::get_data_cache_miss;
-std::atomic<uint64_t> cache_profiles::get_data_cache_hit;
+std::atomic<uint64_t> profiles::mis_file_search;
 
-std::atomic<uint64_t> cache_profiles::iter_data_cache_access_times;
-std::atomic<uint64_t> cache_profiles::iter_data_cache_miss;
-std::atomic<uint64_t> cache_profiles::iter_data_cache_hit;
+std::atomic<uint64_t> profiles::table_cache_Get;
 
-std::atomic<uint64_t> cache_profiles::data_cache_access_times;
-std::atomic<uint64_t> cache_profiles::data_cache_miss;
-std::atomic<uint64_t> cache_profiles::data_cache_hit;
+std::atomic<uint64_t> profiles::find_table;    // table cache 990 default
+std::atomic<uint64_t> profiles::Internal_Get;
+
+std::atomic<uint64_t> profiles::index_block_iter;
+std::atomic<uint64_t> profiles::filter_KeyMayMatch;
+std::atomic<uint64_t> profiles::data_block_iter;
+std::atomic<uint64_t> profiles::value_copy;
 
 // Comma-separated list of operations to run in the specified order
 //   Actual benchmarks:
@@ -70,13 +59,11 @@ std::atomic<uint64_t> cache_profiles::data_cache_hit;
 //      sstables    -- Print sstable info
 //      heapprofile -- Dump a heap profile (if supported by this port)
 static const char* FLAGS_benchmarks =
-        "clearprofile,"
         "fillrandom,"
-        "printprofile,"
         //"snapshot,"
         "clearprofile,"
-        //"readrandom,"
-        "readwhilewriting,"
+        "readrandom,"
+        //"readwhilewriting,"
         "printprofile,"
         //"readsnapshotwhilewriting,"
         //"fillsync,"
@@ -148,7 +135,7 @@ static int FLAGS_open_files = 0;
 
 // Bloom filter bits per key.
 // Negative means use default settings.
-static int FLAGS_bloom_bits = -1;
+static int FLAGS_bloom_bits = 10;
 
 // If true, do not destroy the existing database.  If you set this
 // flag and also specify a benchmark that wants a fresh database, that
@@ -160,10 +147,6 @@ static bool FLAGS_reuse_logs = false;
 
 // Use the db with the following name.
 static const char* FLAGS_db = nullptr;
-
-// write thread setting in readwhilewriting,
-// [0, FLAGS_threads]
-static int FLAGS_write_threads = 0;
 
 namespace leveldb {
 
@@ -573,7 +556,7 @@ class Benchmark {
       } else if (name == Slice("deleterandom")) {
         method = &Benchmark::DeleteRandom;
       } else if (name == Slice("readwhilewriting")) {
-        //num_threads++;  // Add extra thread for writing
+        num_threads++;  // Add extra thread for writing
         method = &Benchmark::ReadWhileWriting;
       } else if(name == Slice("readsnapshotwhilewriting")) {
           method = &Benchmark::ReadSnapshotWhileWriting;
@@ -1034,17 +1017,15 @@ class Benchmark {
   }
 
   void ReadWhileWriting(ThreadState* thread) {
-    //if (thread->tid > 0) {
-    if (thread->tid > FLAGS_write_threads - 1) {
+    if (thread->tid > 0) {
       ReadRandom(thread);
     } else {
-        WriteRandom(thread);
       // Special thread that keeps writing until other threads are done.
-      /*RandomGenerator gen;
+      RandomGenerator gen;
       while (true) {
         {
           MutexLock l(&thread->shared->mu);
-          if (thread->shared->num_done + FLAGS_write_threads >= thread->shared->num_initialized) {
+          if (thread->shared->num_done + 1 >= thread->shared->num_initialized) {
             // Other threads have finished
             break;
           }
@@ -1061,7 +1042,7 @@ class Benchmark {
       }
 
       // Do not count any of the preceding work/delay in stats.
-      thread->stats.Start();*/
+      thread->stats.Start();
     }
   }
 
@@ -1129,11 +1110,11 @@ class Benchmark {
   }
 
   void ClearProfile() {
-      cache_profiles::Clear();
+      profiles::Clear();
   }
 
   void PrintProfile() {
-      cache_profiles::Message(std::cout);
+      profiles::Message(std::cout);
   }
 
 };
@@ -1184,8 +1165,6 @@ int main(int argc, char** argv) {
       FLAGS_bloom_bits = n;
     } else if (sscanf(argv[i], "--open_files=%d%c", &n, &junk) == 1) {
       FLAGS_open_files = n;
-    } else if (sscanf(argv[i], "--write_threads=%d%c", &n, &junk) == 1) {
-        FLAGS_write_threads = n;
     } else if (strncmp(argv[i], "--db=", 5) == 0) {
             FLAGS_db = argv[i] + 5;
     } else {

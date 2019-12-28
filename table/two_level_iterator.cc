@@ -8,13 +8,12 @@
 #include "table/block.h"
 #include "table/format.h"
 #include "table/iterator_wrapper.h"
-#include "util/global_profiles.h"
 
 namespace leveldb {
 
 namespace {
 
-typedef Iterator* (*BlockFunction)(void*, const ReadOptions&, const Slice&, cache_profiles::parameter_padding);
+typedef Iterator* (*BlockFunction)(void*, const ReadOptions&, const Slice&);
 
 class TwoLevelIterator: public Iterator {
  public:
@@ -22,8 +21,7 @@ class TwoLevelIterator: public Iterator {
     Iterator* index_iter,
     BlockFunction block_function,
     void* arg,
-    const ReadOptions& options,
-    cache_profiles::parameter_padding pp);
+    const ReadOptions& options);
 
   virtual ~TwoLevelIterator();
 
@@ -64,7 +62,6 @@ class TwoLevelIterator: public Iterator {
   void SetDataIterator(Iterator* data_iter);
   void InitDataBlock();
 
-  cache_profiles::parameter_padding pp_;
   BlockFunction block_function_;
   void* arg_;
   const ReadOptions options_;
@@ -80,10 +77,8 @@ TwoLevelIterator::TwoLevelIterator(
     Iterator* index_iter,
     BlockFunction block_function,
     void* arg,
-    const ReadOptions& options,
-    cache_profiles::parameter_padding pp)
-    : pp_(pp),
-      block_function_(block_function),
+    const ReadOptions& options)
+    : block_function_(block_function),
       arg_(arg),
       options_(options),
       index_iter_(index_iter),
@@ -171,7 +166,7 @@ void TwoLevelIterator::InitDataBlock() {
     } else {
       // tips: call GetFileIterator here. arg_ is table_cache_.
       // call BlockReader here. arg_ is table.
-      Iterator* iter = (*block_function_)(arg_, options_, handle, pp_);
+      Iterator* iter = (*block_function_)(arg_, options_, handle);
       data_block_handle_.assign(handle.data(), handle.size());
       SetDataIterator(iter);
     }
@@ -184,9 +179,8 @@ Iterator* NewTwoLevelIterator(
     Iterator* index_iter,
     BlockFunction block_function,
     void* arg,
-    const ReadOptions& options,
-    cache_profiles::parameter_padding pp) {
-  return new TwoLevelIterator(index_iter, block_function, arg, options, pp);
+    const ReadOptions& options) {
+  return new TwoLevelIterator(index_iter, block_function, arg, options);
 }
 
 }  // namespace leveldb

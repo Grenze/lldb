@@ -222,8 +222,7 @@ class Version::LevelFileNumIterator : public Iterator {
 // file_value: file_number file_size
 static Iterator* GetFileIterator(void* arg,
                                  const ReadOptions& options,
-                                 const Slice& file_value,
-                                 cache_profiles::parameter_padding) {
+                                 const Slice& file_value) {
   TableCache* cache = reinterpret_cast<TableCache*>(arg);
   if (file_value.size() != 16) {
     return NewErrorIterator(
@@ -239,7 +238,7 @@ Iterator* Version::NewConcatenatingIterator(const ReadOptions& options,
                                             int level) const {
   return NewTwoLevelIterator(
       new LevelFileNumIterator(vset_->icmp_, &files_[level]),
-      &GetFileIterator, vset_->table_cache_, options, cache_profiles::GetFileIterator);
+      &GetFileIterator, vset_->table_cache_, options);
 }
 
 void Version::AddIterators(const ReadOptions& options,
@@ -285,7 +284,9 @@ static void SaveValue(void* arg, const Slice& ikey, const Slice& v) {
     if (s->ucmp->Compare(parsed_key.user_key, s->user_key) == 0) {
       s->state = (parsed_key.type == kTypeValue) ? kFound : kDeleted;
       if (s->state == kFound) {
+        uint64_t start_time = profiles::NowNanos();
         s->value->assign(v.data(), v.size());
+        profiles::value_copy += (profiles::NowNanos() - start_time);
       }
     }
   }
@@ -344,6 +345,7 @@ Status Version::Get(const ReadOptions& options,
                     const LookupKey& k,
                     std::string* value,
                     GetStats* stats) {
+  uint64_t start_time = profiles::NowNanos();
   Slice ikey = k.internal_key();
   Slice user_key = k.user_key();
   const Comparator* ucmp = vset_->icmp_.user_comparator();
@@ -419,26 +421,32 @@ Status Version::Get(const ReadOptions& options,
       saver.user_key = user_key;
       saver.value = value;
       // tips: Find the key in SST and assign the value to saver.value.
+      uint64_t mis_time = profiles::NowNanos();
       s = vset_->table_cache_->Get(options, f->number, f->file_size,
                                    ikey, &saver, SaveValue);
       if (!s.ok()) {
+        profiles::Version_Get += (profiles::NowNanos() - start_time);
         return s;
       }
       switch (saver.state) {
         case kNotFound:
+          profiles::mis_file_search += (profiles::NowNanos() - mis_time);
           break;      // Keep searching in other files
         case kFound:
+          profiles::Version_Get += (profiles::NowNanos() - start_time);
           return s;
         case kDeleted:
           s = Status::NotFound(Slice());  // Use empty error message for speed
+          profiles::Version_Get += (profiles::NowNanos() - start_time);
           return s;
         case kCorrupt:
           s = Status::Corruption("corrupted key for ", user_key);
+          profiles::Version_Get += (profiles::NowNanos() - start_time);
           return s;
       }
     }
   }
-
+  profiles::Version_Get += (profiles::NowNanos() - start_time);
   return Status::NotFound(Slice());  // Use an empty error message for speed
 }
 
@@ -1303,7 +1311,7 @@ Iterator* VersionSet::MakeInputIterator(Compaction* c) {
         // Create concatenating iterator for the files from this level
         list[num++] = NewTwoLevelIterator(
             new Version::LevelFileNumIterator(icmp_, &c->inputs_[which]),
-            &GetFileIterator, table_cache_, options, cache_profiles::GetFileIterator);
+            &GetFileIterator, table_cache_, options);
       }
     }
   }

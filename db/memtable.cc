@@ -8,6 +8,7 @@
 #include "leveldb/env.h"
 #include "leveldb/iterator.h"
 #include "util/coding.h"
+#include "util/global_profiles.h"
 
 namespace leveldb {
 
@@ -109,6 +110,7 @@ void MemTable::Add(SequenceNumber s, ValueType type,
 }
 
 bool MemTable::Get(const LookupKey& key, std::string* value, Status* s) {
+  uint64_t start_time = profiles::NowNanos();
   Slice memkey = key.memtable_key();
   Table::Iterator iter(&table_);
   iter.Seek(memkey.data());
@@ -138,14 +140,17 @@ bool MemTable::Get(const LookupKey& key, std::string* value, Status* s) {
         case kTypeValue: {
           Slice v = GetLengthPrefixedSlice(key_ptr + key_length);
           value->assign(v.data(), v.size());
+          profiles::mems_Get += (profiles::NowNanos() - start_time);
           return true;
         }
         case kTypeDeletion:
           *s = Status::NotFound(Slice());
+          profiles::mems_Get += (profiles::NowNanos() - start_time);
           return true;
       }
     }
   }
+  profiles::mems_Get += (profiles::NowNanos() - start_time);
   return false;
 }
 

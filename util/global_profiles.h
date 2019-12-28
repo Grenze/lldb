@@ -7,115 +7,67 @@
 
 #include <iostream>
 #include <atomic>
-namespace cache_profiles {
+#include <chrono>
 
-extern std::atomic<uint64_t> env_file_write_times;
-extern std::atomic<uint64_t> env_file_write_len;
+namespace profiles {
 
-extern std::atomic<uint64_t> env_file_read_times;
-extern std::atomic<uint64_t> env_file_read_len;
-extern std::atomic<uint64_t> ReadBlock_times;
-extern std::atomic<uint64_t> ReadBlock_len;
-extern std::atomic<uint64_t> read_footer_times;
-extern std::atomic<uint64_t> read_footer_len;
-extern std::atomic<uint64_t> read_index_meta_block_times;
-extern std::atomic<uint64_t> read_index_meta_block_len;
-extern std::atomic<uint64_t> get_data_block_times;
-extern std::atomic<uint64_t> get_data_block_len;
-extern std::atomic<uint64_t> iter_data_block_times;
-extern std::atomic<uint64_t> iter_data_block_len;
+extern std::atomic<uint64_t> DBImpl_Get;
 
-extern std::atomic<uint64_t> get_data_cache_access_times;
-extern std::atomic<uint64_t> get_data_cache_miss;
-extern std::atomic<uint64_t> get_data_cache_hit;
+extern std::atomic<uint64_t> mems_Get;
+extern std::atomic<uint64_t> Version_Get;
 
-extern std::atomic<uint64_t> iter_data_cache_access_times;
-extern std::atomic<uint64_t> iter_data_cache_miss;
-extern std::atomic<uint64_t> iter_data_cache_hit;
+extern std::atomic<uint64_t> mis_file_search;
 
-extern std::atomic<uint64_t> data_cache_access_times;
-extern std::atomic<uint64_t> data_cache_miss;
-extern std::atomic<uint64_t> data_cache_hit;
+extern std::atomic<uint64_t> table_cache_Get;
+
+extern std::atomic<uint64_t> find_table;    // table cache 990 default
+extern std::atomic<uint64_t> Internal_Get;
+
+extern std::atomic<uint64_t> index_block_iter;
+extern std::atomic<uint64_t> filter_KeyMayMatch;
+extern std::atomic<uint64_t> data_block_iter;
+extern std::atomic<uint64_t> value_copy;
 
 inline static void Clear() {
-    env_file_write_times = 0;
-    env_file_write_len = 0;
-
-    env_file_read_times = 0;
-    env_file_read_len = 0;
-    ReadBlock_times = 0;
-    ReadBlock_len = 0;
-    read_footer_times = 0;
-    read_footer_len = 0;
-    read_index_meta_block_times = 0;
-    read_index_meta_block_len = 0;
-    get_data_block_times = 0;
-    get_data_block_len = 0;
-    iter_data_block_times = 0;
-    iter_data_block_len = 0;
-
-    get_data_cache_access_times = 0;
-    get_data_cache_miss = 0;
-    get_data_cache_hit = 0;
-
-    iter_data_cache_access_times = 0;
-    iter_data_cache_miss = 0;
-    iter_data_cache_hit = 0;
-
-    data_cache_access_times = 0;
-    data_cache_miss = 0;
-    data_cache_hit = 0;
+    DBImpl_Get = 0;
+    mems_Get = 0;
+    Version_Get = 0;
+    mis_file_search = 0;
+    table_cache_Get = 0;
+    find_table = 0;
+    Internal_Get = 0;
+    index_block_iter = 0;
+    filter_KeyMayMatch = 0;
+    data_block_iter = 0;
+    value_copy = 0;
 }
 
-inline bool Confirm() {
-    return (env_file_read_times == ReadBlock_times + read_footer_times)
-           && (env_file_read_len == ReadBlock_len + read_footer_len)
-           && (ReadBlock_times == read_index_meta_block_times + get_data_block_times + iter_data_block_times)
-           && (ReadBlock_len == read_index_meta_block_len + get_data_block_len + iter_data_block_len)
-           && (get_data_block_times == get_data_cache_miss)
-           && (iter_data_block_times == iter_data_cache_miss)
-           && (data_cache_access_times == get_data_cache_access_times + iter_data_cache_access_times)
-           && (data_cache_miss == get_data_cache_miss + iter_data_cache_miss)
-           && (data_cache_hit == get_data_cache_hit + iter_data_cache_hit)
-           && (get_data_cache_access_times == get_data_cache_hit + get_data_cache_miss)
-           && (iter_data_cache_access_times == iter_data_cache_hit + iter_data_cache_miss);
+inline static bool Confirm() {
+    return true;
 }
 
 inline static void Message(std::ostream& os) {
     os << "confirm: \t" << Confirm() << "\n";
-    os << "env_file_write_times: \t" << env_file_write_times << "\n" <<
-    "env_file_write_len: \t" << env_file_write_len << "\n" <<
-    "env_file_read_times: \t" << env_file_read_times << "\n" <<
-    "env_file_read_len: \t" << env_file_read_len << "\n" <<
-    "ReadBlock_times: \t" << ReadBlock_times << "\n" <<
-    "ReadBlock_len: \t" << ReadBlock_len << "\n" <<
-    "read_footer_times: \t" << read_footer_times << "\n" <<
-    "read_footer_len: \t" << read_footer_len << "\n" <<
-    "read_index_meta_block_times: \t" << read_index_meta_block_times << "\n" <<
-    "read_index_meta_block_len: \t" << read_index_meta_block_len << "\n" <<
-    "get_data_block_times: \t" << get_data_block_times << "\n" <<
-    "get_data_block_len: \t" << get_data_block_len << "\n" <<
-    "iter_data_block_times: \t" << iter_data_block_times << "\n" <<
-    "iter_data_block_len: \t" << iter_data_block_len << "\n" <<
-    "get_data_cache_access_times: \t" << get_data_cache_access_times << "\n" <<
-    "get_data_cache_miss: \t" << get_data_cache_miss << "\n" <<
-    "get_data_cache_hit: \t" << get_data_cache_hit << "\n" <<
-    "iter_data_cache_access_times: \t" << iter_data_cache_access_times << "\n" <<
-    "iter_data_cache_miss: \t" << iter_data_cache_miss << "\n" <<
-    "iter_data_cache_hit: \t" << iter_data_cache_hit << "\n" <<
-    "data_cache_access_times: \t" << data_cache_access_times << "\n" <<
-    "data_cache_miss: \t" << data_cache_miss << "\n" <<
-    "data_cache_hit: \t" << data_cache_hit << "\n";
+    os << "DBImpl_Get: \t" << DBImpl_Get << "\n";
+    os << "mems_Get: \t" << mems_Get << "\n";
+    os << "Version_Get: \t" << Version_Get << "\n";
+    os << "mis_file_search: \t" << mis_file_search << "\n";
+    os << "table_cache_Get: \t" << table_cache_Get << "\n";
+    os << "find_table: \t" << find_table << "\n";
+    os << "Internal_Get: \t" << Internal_Get << "\n";
+    os << "index_block_iter: \t" << index_block_iter << "\n";
+    os << "filter_KeyMayMatch: \t" << filter_KeyMayMatch << "\n";
+    os << "data_block_iter: \t" << data_block_iter << "\n";
+    os << "value_copy: \t" << value_copy << "\n";
 }
 
-enum parameter_padding {
-    IndexAndMeta = 0,
-    InternalGet = 1,
-    Table_NewIterator = 2,
-    GetFileIterator = 3
-};
-
+inline static uint64_t NowNanos() {
+    return static_cast<uint64_t>(::std::chrono::duration_cast<::std::chrono::nanoseconds>(
+            ::std::chrono::steady_clock::now().time_since_epoch())
+            .count());
 }
+}
+
 
 
 #endif //LEVELDB_GLOBAL_PROFILES_H
