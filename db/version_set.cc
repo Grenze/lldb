@@ -276,6 +276,7 @@ struct Saver {
 };
 }
 static void SaveValue(void* arg, const Slice& ikey, const Slice& v) {
+  uint64_t start_time = profiles::NowNanos();
   Saver* s = reinterpret_cast<Saver*>(arg);
   ParsedInternalKey parsed_key;
   if (!ParseInternalKey(ikey, &parsed_key)) {
@@ -284,12 +285,13 @@ static void SaveValue(void* arg, const Slice& ikey, const Slice& v) {
     if (s->ucmp->Compare(parsed_key.user_key, s->user_key) == 0) {
       s->state = (parsed_key.type == kTypeValue) ? kFound : kDeleted;
       if (s->state == kFound) {
-        uint64_t start_time = profiles::NowNanos();
+        uint64_t copy_time = profiles::NowNanos();
         s->value->assign(v.data(), v.size());
-        profiles::value_copy += (profiles::NowNanos() - start_time);
+        profiles::value_copy += (profiles::NowNanos() - copy_time);
       }
     }
   }
+  profiles::save_value += (profiles::NowNanos() - start_time);
 }
 
 static bool NewestFirst(FileMetaData* a, FileMetaData* b) {

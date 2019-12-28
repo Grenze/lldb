@@ -33,6 +33,7 @@ std::atomic<uint64_t> profiles::Internal_Get;
 std::atomic<uint64_t> profiles::index_block_iter;
 std::atomic<uint64_t> profiles::filter_KeyMayMatch;
 std::atomic<uint64_t> profiles::data_block_iter;
+std::atomic<uint64_t> profiles::save_value;
 std::atomic<uint64_t> profiles::value_copy;
 
 // Comma-separated list of operations to run in the specified order
@@ -105,7 +106,7 @@ static int FLAGS_reads = -1;
 static int FLAGS_threads = 1;
 
 // Size of each value
-static int FLAGS_value_size = 1000;
+static int FLAGS_value_size = 100;
 
 // Arrange to generate values that shrink to this fraction of
 // their original size after compression

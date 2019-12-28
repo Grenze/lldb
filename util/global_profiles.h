@@ -26,6 +26,7 @@ extern std::atomic<uint64_t> Internal_Get;
 extern std::atomic<uint64_t> index_block_iter;
 extern std::atomic<uint64_t> filter_KeyMayMatch;
 extern std::atomic<uint64_t> data_block_iter;
+extern std::atomic<uint64_t> save_value;
 extern std::atomic<uint64_t> value_copy;
 
 inline static void Clear() {
@@ -39,6 +40,7 @@ inline static void Clear() {
     index_block_iter = 0;
     filter_KeyMayMatch = 0;
     data_block_iter = 0;
+    save_value = 0;
     value_copy = 0;
 }
 
@@ -58,6 +60,7 @@ inline static void Message(std::ostream& os) {
     os << "index_block_iter: \t" << index_block_iter << "\n";
     os << "filter_KeyMayMatch: \t" << filter_KeyMayMatch << "\n";
     os << "data_block_iter: \t" << data_block_iter << "\n";
+    os << "save_value: \t" << save_value << "\n";
     os << "value_copy: \t" << value_copy << "\n";
 }
 
