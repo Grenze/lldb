@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
+#include <util/global_profiles.h>
 #include "table/filter_block.h"
 
 #include "leveldb/filter_policy.h"
@@ -94,18 +95,23 @@ FilterBlockReader::FilterBlockReader(const FilterPolicy* policy,
 }
 
 bool FilterBlockReader::KeyMayMatch(uint64_t block_offset, const Slice& key) {
+  uint64_t start_time = profiles::NowNanos();
   uint64_t index = block_offset >> base_lg_;
   if (index < num_) {
     uint32_t start = DecodeFixed32(offset_ + index*4);
     uint32_t limit = DecodeFixed32(offset_ + index*4 + 4);
     if (start <= limit && limit <= static_cast<size_t>(offset_ - data_)) {
       Slice filter = Slice(data_ + start, limit - start);
-      return policy_->KeyMayMatch(key, filter);
+      bool ret = policy_->KeyMayMatch(key, filter);
+      profiles::filter_KeyMayMatch += (profiles::NowNanos() - start_time);
+      return ret;
     } else if (start == limit) {
       // Empty filters do not match any keys
+      profiles::filter_KeyMayMatch += (profiles::NowNanos() - start_time);
       return false;
     }
   }
+  profiles::filter_KeyMayMatch += (profiles::NowNanos() - start_time);
   return true;  // Errors are treated as potential matches
 }
 

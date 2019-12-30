@@ -6,7 +6,6 @@
 
 #include "leveldb/slice.h"
 #include "util/hash.h"
-#include "util/global_profiles.h"
 
 namespace leveldb {
 
@@ -62,10 +61,8 @@ class BloomFilterPolicy : public FilterPolicy {
   }
 
   virtual bool KeyMayMatch(const Slice& key, const Slice& bloom_filter) const {
-    uint64_t start_time = profiles::NowNanos();
     const size_t len = bloom_filter.size();
     if (len < 2) {
-        profiles::filter_KeyMayMatch += (profiles::NowNanos() - start_time);
         return false;
     }
 
@@ -78,7 +75,6 @@ class BloomFilterPolicy : public FilterPolicy {
     if (k > 30) {
       // Reserved for potentially new encodings for short bloom filters.
       // Consider it a match.
-      profiles::filter_KeyMayMatch += (profiles::NowNanos() - start_time);
       return true;
     }
 
@@ -87,12 +83,10 @@ class BloomFilterPolicy : public FilterPolicy {
     for (size_t j = 0; j < k; j++) {
       const uint32_t bitpos = h % bits;
       if ((array[bitpos/8] & (1 << (bitpos % 8))) == 0) {
-        profiles::filter_KeyMayMatch += (profiles::NowNanos() - start_time);
         return false;
       }
       h += delta;
     }
-    profiles::filter_KeyMayMatch += (profiles::NowNanos() - start_time);
     return true;
   }
 };
