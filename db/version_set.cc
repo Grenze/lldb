@@ -424,6 +424,7 @@ Status Version::Get(const ReadOptions& options,
       saver.value = value;
       // tips: Find the key in SST and assign the value to saver.value.
       uint64_t mis_time = profiles::NowNanos();
+      profiles::table_cache_Get_times ++;
       s = vset_->table_cache_->Get(options, f->number, f->file_size,
                                    ikey, &saver, SaveValue);
       if (!s.ok()) {

@@ -19,6 +19,7 @@ extern std::atomic<uint64_t> Version_Get;
 extern std::atomic<uint64_t> mis_file_search;
 
 extern std::atomic<uint64_t> table_cache_Get;
+extern std::atomic<uint64_t> table_cache_Get_times;
 
 extern std::atomic<uint64_t> find_table;    // table cache 990 default
 extern std::atomic<uint64_t> Internal_Get;
@@ -35,6 +36,7 @@ inline static void Clear() {
     Version_Get = 0;
     mis_file_search = 0;
     table_cache_Get = 0;
+    table_cache_Get_times = 0;
     find_table = 0;
     Internal_Get = 0;
     index_block_iter = 0;
@@ -55,6 +57,7 @@ inline static void Message(std::ostream& os) {
     os << "Version_Get: \t" << Version_Get << "\n";
     os << "mis_file_search: \t" << mis_file_search << "\n";
     os << "table_cache_Get: \t" << table_cache_Get << "\n";
+    os << "table_cache_Get_times: \t" << table_cache_Get_times << "\n";
     os << "find_table: \t" << find_table << "\n";
     os << "Internal_Get: \t" << Internal_Get << "\n";
     os << "index_block_iter: \t" << index_block_iter << "\n";

@@ -26,6 +26,7 @@ std::atomic<uint64_t> profiles::Version_Get;
 std::atomic<uint64_t> profiles::mis_file_search;
 
 std::atomic<uint64_t> profiles::table_cache_Get;
+std::atomic<uint64_t> profiles::table_cache_Get_times;
 
 std::atomic<uint64_t> profiles::find_table;    // table cache 990 default
 std::atomic<uint64_t> profiles::Internal_Get;
