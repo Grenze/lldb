@@ -37,6 +37,8 @@ std::atomic<uint64_t> profiles::data_block_iter;
 std::atomic<uint64_t> profiles::save_value;
 std::atomic<uint64_t> profiles::value_copy;
 
+std::atomic<uint64_t> profiles::write_len;
+
 // Comma-separated list of operations to run in the specified order
 //   Actual benchmarks:
 //      fillseq       -- write N values in sequential key order in async mode

@@ -30,6 +30,8 @@ extern std::atomic<uint64_t> data_block_iter;
 extern std::atomic<uint64_t> save_value;
 extern std::atomic<uint64_t> value_copy;
 
+extern std::atomic<uint64_t> write_len;
+
 inline static void Clear() {
     DBImpl_Get = 0;
     mems_Get = 0;
@@ -44,6 +46,7 @@ inline static void Clear() {
     data_block_iter = 0;
     save_value = 0;
     value_copy = 0;
+    write_len = 0;
 }
 
 inline static bool Confirm() {
@@ -65,6 +68,7 @@ inline static void Message(std::ostream& os) {
     os << "data_block_iter: \t" << data_block_iter << "\n";
     os << "save_value: \t" << save_value << "\n";
     os << "value_copy: \t" << value_copy << "\n";
+    os << "write_len: \t" << write_len << "\n";
 }
 
 inline static uint64_t NowNanos() {

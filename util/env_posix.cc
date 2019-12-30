@@ -34,6 +34,7 @@
 #include "port/thread_annotations.h"
 #include "util/posix_logger.h"
 #include "util/env_posix_test_helper.h"
+#include "util/global_profiles.h"
 
 // HAVE_FDATASYNC is defined in the auto-generated port_config.h, which is
 // included by port_stdcxx.h.
@@ -307,6 +308,7 @@ class PosixWritableFile final : public WritableFile {
         }
         return PosixError(filename_, errno);
       }
+      profiles::write_len += write_result;
       data += write_result;
       size -= write_result;
     }
