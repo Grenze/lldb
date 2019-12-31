@@ -37,6 +37,7 @@ std::atomic<uint64_t> profiles::index_block_iter;
 std::atomic<uint64_t> profiles::filter_KeyMayMatch;
 std::atomic<uint64_t> profiles::data_block_iter;
 std::atomic<uint64_t> profiles::data_block_iter_times;
+std::atomic<uint64_t> profiles::data_block_iter_init;
 std::atomic<uint64_t> profiles::data_block_binary;
 std::atomic<uint64_t> profiles::data_block_binary_times;
 std::atomic<uint64_t> profiles::save_value;
