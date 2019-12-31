@@ -1166,6 +1166,7 @@ Status DBImpl::Get(const ReadOptions& options,
   uint64_t start_time = profiles::NowNanos();
   Status s;
   MutexLock l(&mutex_);
+  profiles::lock_wait += (profiles::NowNanos() - start_time);
   SequenceNumber snapshot;
   if (options.snapshot != nullptr) {
     snapshot =
@@ -1197,12 +1198,15 @@ Status DBImpl::Get(const ReadOptions& options,
       s = current->Get(options, lkey, value, &stats);
       have_stat_update = true;
     }
+    uint64_t wait_time = profiles::NowNanos();
     mutex_.Lock();
+    profiles::lock_wait += (profiles::NowNanos() - wait_time);
   }
-
+  uint64_t compact_time = profiles::NowNanos();
   if (have_stat_update && current->UpdateStats(stats)) {
     MaybeScheduleCompaction();
   }
+  profiles::compact += (profiles::NowNanos() - compact_time);
   mem->Unref();
   if (imm != nullptr) imm->Unref();
   current->Unref();

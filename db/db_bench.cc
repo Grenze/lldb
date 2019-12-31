@@ -20,6 +20,8 @@
 
 std::atomic<uint64_t> profiles::DBImpl_Get;
 
+std::atomic<uint64_t> profiles::lock_wait;
+std::atomic<uint64_t> profiles::compact;
 std::atomic<uint64_t> profiles::mems_Get;
 std::atomic<uint64_t> profiles::Version_Get;
 

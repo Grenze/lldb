@@ -13,6 +13,8 @@ namespace profiles {
 
 extern std::atomic<uint64_t> DBImpl_Get;
 
+extern std::atomic<uint64_t> lock_wait;
+extern std::atomic<uint64_t> compact;
 extern std::atomic<uint64_t> mems_Get;
 extern std::atomic<uint64_t> Version_Get;
 
@@ -34,6 +36,8 @@ extern std::atomic<uint64_t> write_len;
 
 inline static void Clear() {
     DBImpl_Get = 0;
+    lock_wait = 0;
+    compact = 0;
     mems_Get = 0;
     Version_Get = 0;
     mis_file_search = 0;
@@ -56,6 +60,8 @@ inline static bool Confirm() {
 inline static void Message(std::ostream& os) {
     os << "confirm: \t" << Confirm() << "\n";
     os << "DBImpl_Get: \t" << DBImpl_Get << "\n";
+    os << "lock_wait: \t" << lock_wait << "\n";
+    os << "compact: \t" << compact << "\n";
     os << "mems_Get: \t" << mems_Get << "\n";
     os << "Version_Get: \t" << Version_Get << "\n";
     os << "mis_file_search: \t" << mis_file_search << "\n";
