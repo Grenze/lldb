@@ -9,6 +9,7 @@
 #include "table/block.h"
 #include "util/coding.h"
 #include "util/crc32c.h"
+#include "util/global_profiles.h"
 
 namespace leveldb {
 
@@ -75,7 +76,11 @@ Status ReadBlock(RandomAccessFile* file,
   size_t n = static_cast<size_t>(handle.size());
   char* buf = new char[n + kBlockTrailerSize];
   Slice contents;
+  uint64_t start_time = profiles::NowNanos();
   Status s = file->Read(handle.offset(), n + kBlockTrailerSize, &contents, buf);
+  profiles::block_read_times ++;
+  profiles::block_read += (profiles::NowNanos() - start_time);
+
   if (!s.ok()) {
     delete[] buf;
     return s;

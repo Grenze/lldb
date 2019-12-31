@@ -31,6 +31,8 @@ extern std::atomic<uint64_t> filter_KeyMayMatch;
 extern std::atomic<uint64_t> data_block_iter;
 extern std::atomic<uint64_t> data_block_iter_times;
 extern std::atomic<uint64_t> data_block_iter_init;
+extern std::atomic<uint64_t> block_read;
+extern std::atomic<uint64_t> block_read_times;
 extern std::atomic<uint64_t> data_block_binary;
 extern std::atomic<uint64_t> data_block_binary_times;
 extern std::atomic<uint64_t> save_value;
@@ -54,6 +56,8 @@ inline static void Clear() {
     data_block_iter = 0;
     data_block_iter_times = 0;
     data_block_iter_init = 0;
+    block_read = 0;
+    block_read_times = 0;
     data_block_binary = 0;
     data_block_binary_times = 0;
     save_value = 0;
@@ -82,6 +86,8 @@ inline static void Message(std::ostream& os) {
     os << "data_block_iter: \t" << data_block_iter << "\n";
     os << "data_block_iter_times: \t" << data_block_iter_times << "\n";
     os << "data_block_iter_init: \t" << data_block_iter_init << "\n";
+    os << "block_read: \t" << block_read << "\n";
+    os << "block_read_times: \t" << block_read_times << "\n";
     os << "data_block_binary: \t" << data_block_binary << "\n";
     os << "data_block_binary_times: \t" << data_block_binary_times << "\n";
     os << "save_value: \t" << save_value << "\n";
