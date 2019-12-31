@@ -241,6 +241,7 @@ Status Table::InternalGet(const ReadOptions& options, const Slice& k,
       Iterator* block_iter = BlockReader(this, options, iiter->value());
       block_iter->Seek(k);
       profiles::data_block_iter += (profiles::NowNanos() - block_time);
+      profiles::data_block_iter_times ++;
       if (block_iter->Valid()) {
         (*saver)(arg, block_iter->key(), block_iter->value());
       }
