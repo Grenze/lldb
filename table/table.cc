@@ -182,7 +182,10 @@ Iterator* Table::BlockReader(void* arg,
       if (cache_handle != nullptr) {
         block = reinterpret_cast<Block*>(block_cache->Value(cache_handle));
       } else {
+        uint64_t start_time = profiles::NowNanos();
         s = ReadBlock(table->rep_->file, options, handle, &contents);
+        profiles::block_read += (profiles::NowNanos() - start_time);
+        profiles::block_read_times ++;
         if (s.ok()) {
           block = new Block(contents);
           if (contents.cachable && options.fill_cache) {
