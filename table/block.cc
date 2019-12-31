@@ -12,6 +12,7 @@
 #include "table/format.h"
 #include "util/coding.h"
 #include "util/logging.h"
+#include "util/global_profiles.h"
 
 namespace leveldb {
 
@@ -163,6 +164,8 @@ class Block::Iter : public Iterator {
   }
 
   virtual void Seek(const Slice& target) {
+    uint64_t start_time = profiles::NowNanos();
+    profiles::data_block_binary_times ++;
     // Binary search in restart array to find the last restart point
     // with a key < target
     uint32_t left = 0;
@@ -176,6 +179,7 @@ class Block::Iter : public Iterator {
                                         &shared, &non_shared, &value_length);
       if (key_ptr == nullptr || (shared != 0)) {
         CorruptionError();
+        profiles::data_block_binary += (profiles::NowNanos() - start_time);
         return;
       }
       Slice mid_key(key_ptr, non_shared);
@@ -194,9 +198,11 @@ class Block::Iter : public Iterator {
     SeekToRestartPoint(left);
     while (true) {
       if (!ParseNextKey()) {
+        profiles::data_block_binary += (profiles::NowNanos() - start_time);
         return;
       }
       if (Compare(key_, target) >= 0) {
+        profiles::data_block_binary += (profiles::NowNanos() - start_time);
         return;
       }
     }
